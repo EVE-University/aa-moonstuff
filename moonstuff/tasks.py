@@ -60,7 +60,7 @@ def process_resources(scan):
 
             # While extremely unlikely, it is possible that 2 moons might have the same percentage
             # of an ore in them, so we will account for this.
-            resource, _ = Resource.objects.get_or_create(ore=res[0], amount=res[1], ore_id=res[2])
+            resource, _ = Resource.objects.get_or_create(ore=res[0], amount=res[1], ore_id_id=res[2])
             moon.resources.add(resource.pk)
     except Exception as e:
         logger.error("An Error occurred while processing the following moon scan. {}".format(scan))
@@ -114,7 +114,7 @@ def check_notifications(token):
             for k, v in pop['oreVolumeByType'].items():
                 # Truncate amount to ensure duplicates are caught correctly
                 v = float('%.10f' % v)
-                resource, _ = Resource.objects.get_or_create(ore=types[k], amount=v, ore_id=k)
+                resource, _ = Resource.objects.get_or_create(ore=types[k], amount=v, ore_id_id=k)
                 moon.resources.add(resource.pk)
                 
 
