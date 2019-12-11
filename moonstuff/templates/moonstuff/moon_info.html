@@ -1,5 +1,6 @@
 {% extends 'allianceauth/base.html' %}
 {% load i18n %}
+{% load humanize %}
 {% block page_title %}{% trans 'Moon Info' %}{% endblock %}
 
 {% block content %}
@@ -40,6 +41,21 @@
                         {% endif %}
                     </div>
                 </div>
+            {% if not res|length_is:"0" and perms.add_resource %}
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        Moon Value
+                    </div>
+                    <div class="panel-body">
+                        <input id="days" data-slider-id='ex1Slider' type="range" data-slider-min="1" data-slider-max="30" data-slider-step="1" data-slider-value="30"/>
+                        <br />
+                        <span>Value for a <span id="daysVal">30</span> day pull: <strong><span id="pullVal">{{ value_per_month|floatformat:2|intcomma }}</span></strong></span>
+                    </div>
+                    <div class="panel-footer">
+                        Note: Value calculated based on max refine in a T2 Athanor located in NullSec.
+                    </div>
+                </div>
+            {% endif %}
             </div>
             <div class="col-md-6">
                 <div class="panel panel-primary">
@@ -67,34 +83,32 @@
                         </table>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-6 {% if res|length_is:"0" %}col-md-offset-6{% endif %}">
-                    <div class="panel panel-primary">
-                        <div class="panel-heading text-center">
-                            <h3 class="panel-title"> Past Pulls</h3>
-                        </div>
-                        <div class="panel-body">
-                            <table class="table text-center" id="past-events">
-                                <thead>
-                                    <th> Date (EVE/UTC) </th>
-                                </thead>
-                                <tbody>
-                                    {% if ppulls|length_is:"0" %}
+                <div class="panel panel-primary">
+                    <div class="panel-heading text-center">
+                        <h3 class="panel-title"> Past Pulls</h3>
+                    </div>
+                    <div class="panel-body">
+                        <table class="table text-center" id="past-events">
+                            <thead>
+                                <th> Date (EVE/UTC) </th>
+                            </thead>
+                            <tbody>
+                                {% if ppulls|length_is:"0" %}
+                                    <tr>
+                                        <td> No Past Pulls recorded for this moon.</td>
+                                    </tr>
+                                {% else %}
+                                    {% for pull in ppulls %}
                                         <tr>
-                                            <td> No Past Pulls recorded for this moon.</td>
+                                            <td>{{ pull.arrival_time }}</td>
                                         </tr>
-                                    {% else %}
-                                        {% for pull in ppulls %}
-                                            <tr>
-                                                <td>{{ pull.arrival_time }}</td>
-                                            </tr>
-                                        {% endfor %}
-                                    {% endif %}
-                                </tbody>
-                            </table>
-                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
+            </div>
         </div>
 
     </div>
@@ -102,12 +116,17 @@
 {% endblock %}
 {% block extra_javascript %}
     {% include 'bundles/datatables-js.html' %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/10.6.2/bootstrap-slider.js" integrity="sha256-59/apVFrosMLFX2dHZLGvb3nPpu7e0Yx1rsDr1dTRrk=" crossorigin="anonymous"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/2.0.6/numeral.min.js"></script>
 {% endblock %}
 {% block extra_css %}
     {% include 'bundles/datatables-css.html' %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/10.6.2/css/bootstrap-slider.css" />
 {% endblock %}
 {% block extra_script %}
     $(document).ready(function(){
         $('#past-events').DataTable();
+        $('#days').slider();
+        $('#days').on("slide", function(slideEvt){$('#daysVal').text(slideEvt.value); $('#pullVal').text(numeral(slideEvt.value * {{ value_per_day }}).format('0,0.00'));});
     });
 {% endblock %}

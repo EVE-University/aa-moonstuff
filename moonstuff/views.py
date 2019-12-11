@@ -49,11 +49,20 @@ def moon_info(request, moonid):
         resources = Resource.objects.filter(moon=ctx['moon'])
         res = []
         if len(resources) > 0:
+            moon_value_per_day = 0
             for resource in resources:
                 url = "https://image.eveonline.com/Type/{}_64.png".format(resource.ore_id.pk)
                 name = resource.ore
                 amount = int(round(resource.amount * 100))
+
+                m3_per_day = 20000 * 24
+                value_per_m3 = resource.ore_id.unit_value / resource.ore_id.volume
+                value_per_day = (m3_per_day * float(resource.amount)) * value_per_m3
+                moon_value_per_day += value_per_day
+
                 res.append([name, url, amount])
+            ctx['value_per_day'] = moon_value_per_day
+            ctx['value_per_month'] = moon_value_per_day * 30
         ctx['res'] = res
 
         today = datetime.today().replace(tzinfo=timezone.utc)
