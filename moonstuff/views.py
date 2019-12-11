@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
+from django.db.models import Prefetch, F, Case, When, IntegerField, Max
 from esi.decorators import token_required
 import os
 from datetime import date, datetime, timedelta, timezone
@@ -49,7 +50,7 @@ def moon_info(request, moonid):
         res = []
         if len(resources) > 0:
             for resource in resources:
-                url = "https://image.eveonline.com/Type/{}_64.png".format(resource.ore_id)
+                url = "https://image.eveonline.com/Type/{}_64.png".format(resource.ore_id.pk)
                 name = resource.ore
                 amount = int(round(resource.amount * 100))
                 res.append([name, url, amount])
@@ -125,8 +126,19 @@ def moon_scan(request):
 @login_required()
 @permission_required('moonstuff.view_moonstuff')
 def moon_list(request):
-    moon = Moon.objects.order_by('system_id', 'name')
-    ctx = {'moons': moon}
+    groups = Resource.objects.all().select_related('ore_id').annotate(group=F('ore_id__group_name'))\
+        .annotate(rarity=Case(
+            When(ore_id__group_name__contains="Exceptional", then=64),
+            When(ore_id__group_name__contains="Rare", then=32),
+            When(ore_id__group_name__contains="Uncommon", then=16),
+            When(ore_id__group_name__contains="Common", then=8),
+            When(ore_id__group_name__contains="Ubiquitous", then=4),
+            default=0,
+            output_field=IntegerField()
+        ))
+    moons = Moon.objects.prefetch_related(Prefetch('resources', to_attr='resources_set', queryset=groups))\
+        .order_by('system_id', 'name')
+    ctx = {'moons': moons}
     return render(request, 'moonstuff/moon_list.html', ctx)
 
 
