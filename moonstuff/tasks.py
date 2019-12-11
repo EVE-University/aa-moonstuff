@@ -210,12 +210,13 @@ def pull_ore_types():
         Ore.objects.bulk_create(ores, batch_size=500)
     else:
         Ore.objects.bulk_update(ores)
+    calc_ore_values.delay()
 
 
 @shared_task
 def calc_ore_values():
     # Get Ore Type IDs
-    ore_ids = Ore.objects.all().values_list('ore_id', flat=True).exclude(name__contains="Compressed")
+    ore_ids = Ore.objects.all().values_list('ore_id', flat=True).exclude(ore_name__contains="Compressed")
 
     invTypeMaterials_url = 'https://www.fuzzwork.co.uk/dump/latest/invTypeMaterials.csv.bz2'
     invTypeMaterials_req = requests.get(invTypeMaterials_url)
