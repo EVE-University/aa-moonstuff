@@ -5,6 +5,7 @@ from moonstuff import __version__
 install_requires = [
     'django-bootstrap-form',
     'allianceauth>=2.0.5',
+    'django-bulk-update==2.2.0'
 ]
 
 testing_extras = [
