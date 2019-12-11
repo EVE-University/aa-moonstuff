@@ -3,9 +3,19 @@ from allianceauth.eveonline.models import EveCorporationInfo, EveCharacter
 
 
 # Create your models here.
+class Ore(models.Model):
+    group_id = models.IntegerField()
+    group_name = models.CharField(max_length=255)
+    ore_name = models.CharField(max_length=75)
+    ore_id = models.IntegerField(primary_key=True)
+
+    def __str__(self):
+        return "{} - {}".format(self.group_name, self.ore_name)
+
+
 class Resource(models.Model):
     ore = models.CharField(max_length=75)
-    ore_id = models.IntegerField()
+    ore_id = models.ForeignKey(Ore, on_delete=models.DO_NOTHING)
     amount = models.DecimalField(max_digits=11, decimal_places=10)
 
     def __str__(self):

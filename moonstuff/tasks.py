@@ -2,6 +2,7 @@ from .models import *
 from celery import shared_task
 import logging
 from esi.models import Token
+from esi.clients import esi_client_factory
 import os
 from django.db import utils
 import yaml
@@ -181,3 +182,28 @@ def import_data():
             logger.error(e)
 
         check_notifications(token)
+
+
+@shared_task
+def update_ore_information():
+    # Get Groups in Asteroid Category (25)
+    c = esi_client_factory(version='latest')
+    groups = c.Universe.get_universe_categories_category_id(category_id=25).result()
+    groups = groups['groups']
+
+    ores = []
+    # Get types in group
+    for group in groups:
+        group = c.Universe.get_universe_groups_group_id(group_id=group).result()
+        types = group['types']
+        group_id = group['group_id']
+        group_name = group['name']
+        # Get type info
+        for t in types:
+            t = c.Universe.get_universe_types_type_id(type_id=t).result()
+            ores.append(Ore(group_name=group_name,
+                            group_id=group_id,
+                            ore_name=t['name'],
+                            ore_id=t['type_id']))
+
+    Ore.objects.bulk_create(ores, batch_size=500)
