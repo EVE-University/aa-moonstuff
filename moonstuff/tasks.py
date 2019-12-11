@@ -3,9 +3,8 @@ from celery import shared_task
 import logging
 from esi.models import Token
 from esi.clients import esi_client_factory
-import os
 from django.db import utils
-import yaml
+import yaml, requests, bz2
 
 logger = logging.getLogger(__name__)
 
@@ -185,7 +184,7 @@ def import_data():
 
 
 @shared_task
-def update_ore_information():
+def pull_ore_types():
     # Get Groups in Asteroid Category (25)
     c = esi_client_factory(version='latest')
     groups = c.Universe.get_universe_categories_category_id(category_id=25).result()
@@ -204,6 +203,53 @@ def update_ore_information():
             ores.append(Ore(group_name=group_name,
                             group_id=group_id,
                             ore_name=t['name'],
-                            ore_id=t['type_id']))
+                            ore_id=t['type_id'],
+                            unit_value=None,
+                            volume=t.get('volume', None)))
+    if len(Ore.objects.all()) is 0:
+        Ore.objects.bulk_create(ores, batch_size=500)
+    else:
+        Ore.objects.bulk_update(ores)
 
-    Ore.objects.bulk_create(ores, batch_size=500)
+
+@shared_task
+def calc_ore_values():
+    # Get Ore Type IDs
+    ore_ids = Ore.objects.all().values_list('ore_id', flat=True).exclude(name__contains="Compressed")
+
+    invTypeMaterials_url = 'https://www.fuzzwork.co.uk/dump/latest/invTypeMaterials.csv.bz2'
+    invTypeMaterials_req = requests.get(invTypeMaterials_url)
+    with open('invTypeMaterials.csv.bz2', 'wb') as iN:
+        iN.write(invTypeMaterials_req.content)
+    open('invTypeMaterials.csv', 'wb').write(bz2.open('invTypeMaterials.csv.bz2', 'rb').read())
+
+    mat_types = set()
+    mats = {}
+    with open("invTypeMaterials.csv", 'r', encoding='UTF-8') as iN:
+        text = iN.read()
+
+        rows = text.split('\n')
+        for row in rows[1:-1]:
+            data = row.split(',')
+            # Skip this row if the ID is not an ore
+            if int(data[0]) not in ore_ids:
+                continue
+
+            if int(data[0]) not in mats:
+                mats[int(data[0])] = {data[1]: (int(data[2])*0.876)/100}
+            else:
+                mats[int(data[0])][data[1]] = (int(data[2])*0.876)/100
+            mat_types.add(data[1])
+
+    price_url = 'https://market.fuzzwork.co.uk/aggregates/?station=60003760&types={}'.format(','.join(mat_types))
+    price_req = requests.get(price_url)
+    price_data = price_req.json()
+    values = []
+    for ore, mats in mats.items():
+        unit_value = 0
+        for mat, quant in mats.items():
+            unit_value += float(price_data.get(mat).get('buy').get('weightedAverage')) * quant
+        values.append((ore, unit_value))
+
+    for ore in values:
+        Ore.objects.filter(pk=ore[0]).update(unit_value=ore[1])
