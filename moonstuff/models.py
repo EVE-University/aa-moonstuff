@@ -1,5 +1,4 @@
 from django.db import models
-from django_bulk_update.manager import BulkUpdateManager
 from allianceauth.eveonline.models import EveCorporationInfo, EveCharacter
 
 
@@ -11,8 +10,6 @@ class Ore(models.Model):
     ore_id = models.IntegerField(primary_key=True)
     unit_value = models.FloatField(null=True)
     volume = models.FloatField(null=True)
-
-    objects = BulkUpdateManager()
 
     def __str__(self):
         return "{} - {}".format(self.group_name, self.ore_name)
