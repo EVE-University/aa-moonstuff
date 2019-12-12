@@ -21,6 +21,8 @@ INSTALLED_APPS+=[
 
 Then run migrations and restart your supervisor processes.
 
+After restarting your supervisor processes, run the `moonstuff.tasks.pull_ore_types` task to populate your database with a list of Ore types.
+
 ### Task Schedule
 Add the following to the end of your `local.py`:
 ```python
@@ -29,6 +31,8 @@ CELERYBEAT_SCHEDULE['run_moonstuff_data_import'] = {
     'schedule': crontab(minute='30'),
 }
 ```
+
+To keep ore values up to date, you will also want to schedule the `moonstuff.tasks.calc_ore_values` at a regular interval. Once per week or once per month should be often enough.
 
 Alternatively, you can go to the django admin page and add the task at `[your auth url]/admin/django_celery_beat/periodictask/` 
 
