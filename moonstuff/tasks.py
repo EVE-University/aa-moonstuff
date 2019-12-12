@@ -190,7 +190,10 @@ def pull_ore_types():
     groups = c.Universe.get_universe_categories_category_id(category_id=25).result()
     groups = groups['groups']
 
-    ores = []
+    ore_ids = Ore.objects.all().values_list('ore_id', flat=True)
+
+    new_ores = []
+    updates = []
     # Get types in group
     for group in groups:
         group = c.Universe.get_universe_groups_group_id(group_id=group).result()
@@ -200,16 +203,24 @@ def pull_ore_types():
         # Get type info
         for t in types:
             t = c.Universe.get_universe_types_type_id(type_id=t).result()
-            ores.append(Ore(group_name=group_name,
-                            group_id=group_id,
-                            ore_name=t['name'],
-                            ore_id=t['type_id'],
-                            unit_value=None,
-                            volume=t.get('volume', None)))
-    if len(Ore.objects.all()) is 0:
-        Ore.objects.bulk_create(ores, batch_size=500)
-    else:
-        Ore.objects.bulk_update(ores)
+            if t['type_id'] in ore_ids:
+                new_ores.append(Ore(group_name=group_name,
+                                group_id=group_id,
+                                ore_name=t['name'],
+                                ore_id=t['type_id'],
+                                unit_value=None,
+                                volume=t.get('volume', None)))
+            else:
+                updates.append(Ore(group_name=group_name,
+                               group_id=group_id,
+                               ore_name=t['name'],
+                               ore_id=t['type_id'],
+                               unit_value=None,
+                               volume=t.get('volume', None)))
+    if len(new_ores) > 0:
+        Ore.objects.bulk_create(new_ores, batch_size=500)
+    if len(updates) > 0:
+        Ore.objects.bulk_update(updates, ['group_name', 'group_id', 'ore_name', 'volume'])
     calc_ore_values.delay()
 
 
