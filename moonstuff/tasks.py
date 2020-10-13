@@ -204,14 +204,14 @@ def pull_ore_types():
         for t in types:
             t = c.Universe.get_universe_types_type_id(type_id=t).result()
             if t['type_id'] in ore_ids:
-                new_ores.append(Ore(group_name=group_name,
+                updates.append(Ore(group_name=group_name,
                                 group_id=group_id,
                                 ore_name=t['name'],
                                 ore_id=t['type_id'],
                                 unit_value=None,
                                 volume=t.get('volume', None)))
             else:
-                updates.append(Ore(group_name=group_name,
+                new_ores.append(Ore(group_name=group_name,
                                group_id=group_id,
                                ore_name=t['name'],
                                ore_id=t['type_id'],
