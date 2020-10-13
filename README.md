@@ -9,7 +9,7 @@ Install the project from git to your allianceauth venv.
 
 ```bash
 source /path/to/auth/venv/activate
-pip install git+https://gitlab.com/colcrunch/aa-moonstuff
+pip install aa-moonstuff
 ```
 
 The add it to your `INSTALLED-APPS` in `local.py`.
