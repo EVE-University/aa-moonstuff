@@ -7,7 +7,8 @@ with open("README.md", "r") as fh:
 
 install_requires = [
     'django-bootstrap-form',
-    'allianceauth>=2.7.5',
+    'allianceauth>=2.8.1',
+    'django-esi>=2.0.4',
 ]
 
 testing_extras = [
@@ -19,7 +20,7 @@ setup(
     version=__version__,
     author='Col Crunch',
     author_email='it-team@serin.space',
-    description='An app to deal with moooon!',
+    description='A plugin for publishing moon extractions, and keeping track of moon scan data.',
     install_requires=install_requires,
     extras_require={
         'testing': testing_extras,
