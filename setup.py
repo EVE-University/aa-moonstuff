@@ -9,6 +9,7 @@ install_requires = [
     'django-bootstrap-form',
     'allianceauth>=2.8.1',
     'django-esi>=2.0.4',
+    'django-eveuniverse>=0.7.4',
 ]
 
 testing_extras = [
