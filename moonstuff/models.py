@@ -16,9 +16,9 @@ class Moonstuff(models.Model):
 
 
 class Resource(models.Model):
-    ore = models.ForeignKey(EveType, on_delete=models.DO_NOTHING)
+    ore = models.ForeignKey(EveType, on_delete=models.CASCADE)
     quantity = models.DecimalField(max_digits=11, decimal_places=10)
-    moon = models.ForeignKey(EveMoon, on_delete=models.DO_NOTHING, related_name='resources')
+    moon = models.ForeignKey(EveMoon, on_delete=models.CASCADE, related_name='resources')
 
     class Meta:
         default_permissions = ('add',)
@@ -26,7 +26,7 @@ class Resource(models.Model):
 
 class Refinery(models.Model):
     structure_id = models.BigIntegerField(primary_key=True)
-    evetype = models.ForeignKey(EveType, on_delete=models.DO_NOTHING)
+    evetype = models.ForeignKey(EveType, on_delete=models.CASCADE)
     name = models.CharField(null=True, max_length=255)  # Might not actually need this.
     corp = models.ForeignKey(EveCorporationInfo, on_delete=models.CASCADE, related_name='refineries')
 
@@ -55,9 +55,9 @@ class Extraction(models.Model):
     start_time = models.DateTimeField()
     arrival_time = models.DateTimeField()
     decay_time = models.DateTimeField()
-    moon = models.ForeignKey(EveMoon, on_delete=models.DO_NOTHING, related_name='extractions')
-    refinery = models.ForeignKey(Refinery, on_delete=models.DO_NOTHING, related_name='extractions')
-    corp = models.ForeignKey(EveCorporationInfo, on_delete=models.DO_NOTHING, related_name='extractions')
+    moon = models.ForeignKey(EveMoon, on_delete=models.CASCADE, related_name='extractions')
+    refinery = models.ForeignKey(Refinery, on_delete=models.CASCADE, related_name='extractions')
+    corp = models.ForeignKey(EveCorporationInfo, on_delete=models.CASCADE, related_name='extractions')
     jackpot = models.BooleanField(null=True)
 
     class Meta:
