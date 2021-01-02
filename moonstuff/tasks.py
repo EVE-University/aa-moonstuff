@@ -97,10 +97,8 @@ def load_materials(reload=False):
             Q(eve_group_id__eve_category_id=25) |
             Q(eve_group_id__in=groups)
         ).values_list('id', flat=True)
-    logger.debug(types)
     mats = requests.get("http://sde.zzeve.com/invTypeMaterials.json").json()
     mats = list(filter(lambda t: t['typeID'] in types, mats))   # Filter out unneeded materials from the list
-    logger.debug(f"mats filtered {len(mats)}")
 
     matObjs = list()
     for mat in mats:
