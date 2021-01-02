@@ -15,6 +15,22 @@ class Moonstuff(models.Model):
         )
 
 
+class Material(models.Model):
+    evetype = models.ForeignKey(EveType, on_delete=models.CASCADE, related_name='materials')
+    material_evetype = models.ForeignKey(EveType, on_delete=models.CASCADE, related_name='from_types')
+    quantity = models.IntegerField()
+
+    class Meta:
+        default_permissions = (())
+
+
+class MaterialCheckSum(models.Model):
+    checksum = models.CharField(max_length=255, null=True, default=None)
+
+    class Meta:
+        default_permissions = (())
+
+
 class Resource(models.Model):
     ore = models.ForeignKey(EveType, on_delete=models.CASCADE)
     quantity = models.DecimalField(max_digits=11, decimal_places=10)
