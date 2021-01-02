@@ -23,7 +23,6 @@ def load_types_and_mats(category_ids=None, group_ids=None, type_ids=None, force_
     # Synchronously load SDE data to ensure it exists before we spawn the material loading task.
     # This is basically the logic for the _load_eve_xxx functions from eveuniverse thrown in here to force synchronicity
     if category_ids:
-        logger.debug(f'Calling category update_or_create')
         for category_id in category_ids:
             enabled_sections = (
                 [EveUniverseEntityModel.LOAD_DOGMAS] if force_loading_dogma else None
@@ -37,7 +36,6 @@ def load_types_and_mats(category_ids=None, group_ids=None, type_ids=None, force_
             )
 
     if group_ids:
-        logger.debug('Calling group update_or_create.')
         for group_id in group_ids:
             enabled_sections = (
                 [EveUniverseEntityModel.LOAD_DOGMAS] if force_loading_dogma else None
@@ -51,7 +49,6 @@ def load_types_and_mats(category_ids=None, group_ids=None, type_ids=None, force_
             )
 
     if type_ids:
-        logger.debug('Calling type update_or_create.')
         for type_id in type_ids:
             enabled_sections = (
                 [EveUniverseEntityModel.LOAD_DOGMAS] if force_loading_dogma else None
@@ -67,7 +64,6 @@ def load_types_and_mats(category_ids=None, group_ids=None, type_ids=None, force_
     logger.debug('Done loading eve types! Scheduling material loading.')
     # Any time types are loaded we should ensure we have material data for all types
     load_materials.delay(reload=True)
-    logger.debug('Material loading scheduled.')
 
 
 @shared_task()
@@ -116,7 +112,6 @@ def load_materials(reload=False):
                 )
             )
 
-    logger.debug("Bulk create!")
     Material.objects.bulk_create(matObjs)
 
     logger.info('Material data successfully loaded.')
