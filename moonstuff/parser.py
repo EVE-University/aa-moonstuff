@@ -31,7 +31,7 @@ class ScanParser:
             quantity = lst[1]
             if moon_id not in ret.keys():
                 ret[moon_id] = list()
-            ret[moon_id].append({"ore__pk": ore_id, 'quantity': quantity, 'moon__pk': moon_id})
+            ret[moon_id].append({"ore_id": ore_id, 'quantity': quantity, 'moon_id': moon_id})
 
         return ret
 
