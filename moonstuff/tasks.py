@@ -1,12 +1,16 @@
 import requests
 
 from allianceauth.services.hooks import get_extension_logger
+from allianceauth.notifications import notify
 from celery import shared_task
 from eveuniverse.tasks import update_or_create_eve_object
 from eveuniverse.models import EveUniverseEntityModel
 from django.db.models import Q
+from django.contrib.auth.models import User
 
-from .models import Material, MaterialCheckSum, EveType
+from .models import Material, MaterialCheckSum, EveType, Resource, EveMoon
+from .parser import ScanParser
+from django.utils.translation import gettext as gt
 
 
 logger = get_extension_logger(__name__)
@@ -122,3 +126,41 @@ def load_materials(reload=False):
         last_sum = MaterialCheckSum(pk=1)
     last_sum.checksum = current_sum
     last_sum.save()
+
+
+@shared_task()
+def process_scan(scan_data: str, user_id: int):
+    """
+    Runs the provided scan data through the parser, and creates the required resource objects.
+    :param scan_data: The raw scan data from the view.
+    :param user_id: The user that initiated the scan.
+    :return:
+    """
+    logger.debug('Processing moon scan.')
+    try:
+        data = ScanParser(scan_data).parse()
+
+        resources = list()
+
+        for moon in data:
+            moon, created = EveMoon.objects.get_or_create_esi(id=int(moon))
+            if not created:
+                Resource.objects.filter(moon=moon).delete()
+
+        for res_l in data.values():
+            for res in res_l:
+                resources.append(Resource(**res))
+
+        Resource.objects.bulk_create(resources)
+        logger.debug("Successfully processed moon scan!")
+    except Exception as e:
+        logger.error(f'Failed processing moon scan! (Data sent to user_id {user_id} via notification)')
+        notify(
+            User.objects.get(id=user_id),
+            gt('Failed to Process Moon Scan'),
+            message=gt('There was an error processing the following moon scan:\n'
+                       '%(scan)s'
+                       '\n\n'
+                       'Error Encountered: %(error)s\n') % {'scan': scan_data, 'error': e},
+            level='danger'
+        )
