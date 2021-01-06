@@ -26,6 +26,8 @@ class ScanParser:
         # Build dict of resources keyed to moon id
         for line in scan_lines:
             lst = line.split("\t")[1::]  # Trim off the leading blank space
+            if len(line) < 6:
+                raise Exception("The moonscan provided appears to be malformed.")
             moon_id = int(lst[-1])
             ore_id = int(lst[2])
             quantity = lst[1]
