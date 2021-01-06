@@ -1,0 +1,24 @@
+{% extends 'moonstuff/base.html' %}
+{% load i18n %}
+
+{% block moon_title %} {% translate 'Add Scan' %} {% endblock %}
+
+{% block moon_block %}
+    <div class="container-fluid">
+        <div class="panel panel-primary">
+            <div class="panel-heading"> {% translate "Moon Scan Input" %} </div>
+            <div class="panel-body">
+                <form role="form" method="post" action="">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <textarea class="form-control" name="scan" id="scanBox" rows="10" cols="15" required aria-required="true"></textarea>
+                    </div>
+                    <br />
+                    <button type="submit" role="button" class="btn btn-block btn-primary" name="submit_scan" id="submit_scan">
+                        {% translate "Submit Moon Scan(s)" %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
