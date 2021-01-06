@@ -104,17 +104,17 @@ def load_materials(reload=False):
     mats = requests.get("http://sde.zzeve.com/invTypeMaterials.json").json()
     mats = list(filter(lambda t: t['typeID'] in types, mats))   # Filter out unneeded materials from the list
 
-    matObjs = list()
+    mat_objs = list()
     for mat in mats:
-            matObjs.append(
-                Material(
-                    evetype_id=mat['typeID'],
-                    material_evetype_id=mat['materialTypeID'],
-                    quantity=mat['quantity']
-                )
+        mat_objs.append(
+            Material(
+                evetype_id=mat['typeID'],
+                material_evetype_id=mat['materialTypeID'],
+                quantity=mat['quantity']
             )
+        )
 
-    Material.objects.bulk_create(matObjs)
+    Material.objects.bulk_create(mat_objs)
 
     logger.info('Material data successfully loaded.')
 
