@@ -1,0 +1,14 @@
+{% extends 'allianceauth/base.html' %}
+{% load i18n %}
+
+{% block title %}{% block moon_title %}{% endblock %} - {% translate "Moonstuff" %}{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12" style="padding: 0 !important;">
+        <br />
+        <div class="col-lg-12 container-fluid">
+            {% include 'moonstuff/menu.html' %}
+            {% block moon_block %}{% endblock %}
+        </div>
+    </div>
+{% endblock %}
