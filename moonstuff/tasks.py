@@ -4,7 +4,7 @@ from allianceauth.services.hooks import get_extension_logger
 from allianceauth.notifications import notify
 from celery import shared_task
 from eveuniverse.tasks import update_or_create_eve_object
-from eveuniverse.models import EveUniverseEntityModel
+from eveuniverse.models import EveUniverseEntityModel, EveMarketPrice
 from django.db.models import Q
 from django.contrib.auth.models import User
 
@@ -66,8 +66,9 @@ def load_types_and_mats(category_ids=None, group_ids=None, type_ids=None, force_
             )
 
     logger.debug('Done loading eve types! Scheduling material loading.')
-    # Any time types are loaded we should ensure we have material data for all types
+    # Any time types are loaded we should ensure we have material and price data for all types
     load_materials.delay(reload=True)
+    load_prices.delay()
 
 
 @shared_task()
@@ -164,3 +165,12 @@ def process_scan(scan_data: str, user_id: int):
                        'Error Encountered: %(error)s\n') % {'scan': scan_data, 'error': e},
             level='danger'
         )
+
+
+@shared_task()
+def load_prices():
+    """
+    Updates EveMarketPrice records.
+    :return:
+    """
+    EveMarketPrice.objects.update_from_esi()
