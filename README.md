@@ -8,3 +8,22 @@ extraction schedules.
 
 ### Setting
 `MOON_REFINE_PERCENT` - Define the refine rate to be used when calculating moon value. (Default value: 87.6)
+
+### Permissions
+
+| Permission Name | Admin Site | Auth Site |
+|-----------------|------------|-----------|
+|Moonstuff.access_moonstuff | None | Can access the moonstuff module.|
+|Resource.add_resource | None | Can add access the add_scan page to add moon scan data. |
+|TrackingCharacter.add_trackingcharacter | None | Can link a character to be used in tracking extractions. |
+
+### Scopes
+Though accepted best practice for auth is to ensure that one's ESI application has access to all
+scopes through the EVE Development portal, if you are not following this practice please make sure to 
+include the following scopes in your ESI application.
+
+| Scope | Purpose |
+|-------|---------|
+|esi-industry.read_corporation_mining.v1| This is required to pull corporation moon extraction data. (The in-game Station_Manager role is required) |
+|esi-universe.read_structures.v1 | Required to pull structure names. |
+|esi-characters.read_notifications.v1| Required to pull character notifications used for updating resource data. |
