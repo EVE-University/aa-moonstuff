@@ -6,8 +6,11 @@ from django.conf import settings
 
 from allianceauth.authentication.decorators import permissions_required
 from esi.decorators import token_required
+from allianceauth.eveonline.models import EveCharacter
+
 from .tasks import process_scan
-from .models import Resource
+from .models import Resource, TrackingCharacter
+from .providers import ESI_CHARACTER_SCOPES
 
 # Get refine setting
 refine = .876
@@ -69,6 +72,11 @@ def add_scan(request):
 
 
 @login_required
+@token_required(scopes=ESI_CHARACTER_SCOPES)
 @permission_required('moonstuff.add_trackingcharacter')
-def add_character(request):
-    pass
+def add_character(request, token):
+    messages.success(request, 'Character added!')
+    eve_char = EveCharacter.objects.get(character_id=token.character_id)
+    char = TrackingCharacter(character=eve_char)
+    char.save()
+    return redirect('moonstuff:dashboard')
