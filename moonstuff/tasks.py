@@ -1,19 +1,37 @@
 import requests
+import yaml
+import datetime
+import pytz
 
 from allianceauth.services.hooks import get_extension_logger
 from allianceauth.notifications import notify
+from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from celery import shared_task
 from eveuniverse.tasks import update_or_create_eve_object
 from eveuniverse.models import EveUniverseEntityModel, EveMarketPrice
 from django.db.models import Q
+from django.db.utils import IntegrityError
 from django.contrib.auth.models import User
-
-from .models import Material, MaterialCheckSum, EveType, Resource, EveMoon
-from .parser import ScanParser
 from django.utils.translation import gettext as gt
+from esi.models import Token
 
+from .providers import esi, ESI_CHARACTER_SCOPES
+from .models import Material, MaterialCheckSum, EveType, Resource, EveMoon, TrackingCharacter, Refinery, Extraction
+from .parser import ScanParser
 
 logger = get_extension_logger(__name__)
+
+
+def _get_tokens(scopes):
+    try:
+        tokens = []
+        characters = TrackingCharacter.objects.all()
+        for character in characters:
+            tokens.append(Token.get_token(character.character_id, scopes))
+        return tokens
+    except Exception as e:
+        print(e)
+        return False
 
 
 @shared_task()
@@ -174,3 +192,175 @@ def load_prices():
     :return:
     """
     EveMarketPrice.objects.update_from_esi()
+
+
+@shared_task()
+def import_extraction_data():
+    """
+    Imports extraction data, and schedules notification checks.
+    :return:
+    """
+    client = esi.client
+    tokens = _get_tokens(ESI_CHARACTER_SCOPES)
+    for token in tokens:
+        try:
+            # Get character and corp objects to go with token
+            char = EveCharacter.objects.get(character_id=token.character_id)
+            try:
+                corp = EveCorporationInfo.objects.get(corporation_id=char.corporation_id)
+            except EveCorporationInfo.DoesNotExist:
+                corp = EveCorporationInfo.objects.create_corporation(corp_id=char.corporation_id)
+
+            # Get Extraction events.
+            events = client.Industry.get_corporation_corporation_id_mining_extractions(
+                corporation_id=corp.corporation_id,
+                token=token.valid_access_token()
+            ).results()
+
+            for event in events:
+                # Get Structure Info
+                moon = EveMoon.objects.get_or_create_esi(event['moon_id'])
+                try:
+                    refinery = Refinery.objects.get(structure_id=event['structure_id'])
+                except Refinery.DoesNotExist:
+                    ref = client.Universe.get_universe_structures_structure_id(
+                        structure_id=event['structure_id'],
+                        token=token.valid_token()
+                    ).results()
+                    refinery = Refinery(
+                        structure_id=ref['structure_id'],
+                        name=ref['name'],
+                        corp=ref['owner_id'],
+                        evetype_id=ref['type_id']
+                    )
+                    refinery.save()
+
+                start_time = event['extraction_start_time']
+                arrival_time = event['chunk_arrival_time']
+                decay_time = event['natural_decay_time']
+                try:
+                    # Create the extraction event.
+                    extraction = Extraction.objects.get_or_create(
+                        start_time=start_time,
+                        arrival_time=arrival_time,
+                        decay_time=decay_time,
+                        refinery=refinery,
+                        moon=moon,
+                        corp=corp
+                    )
+                except IntegrityError:
+                    continue
+                except Exception as e:
+                    logger.error(f'Error encountered when saving extraction! Corp ID: {corp.corporation_id}'
+                                 f' Refinery ID: {refinery.structure_id} Event Start: {start_time}')
+                    logger.error(e)
+            logger.info(f'Imported extraction data from {token.character_id}')
+        except Exception as e:
+            logger.error(f'Error importing extraction data from {token.character_id}')
+            logger.error(e)
+
+        check_notifications.delay(token)
+
+
+@shared_task()
+def check_notifications(token: Token):
+    """
+    Checks and processes notifications related to moon mining.
+        Note: This task does not add extraction events!
+    :param token: A django-esi token object.
+    :return:
+    """
+    # Define token and client, ensuring the token is valid.
+    client = esi.client
+    token = token.valid_access_token()
+    char = TrackingCharacter.objects.get(character_id=token.character_id)
+    last_noti = char.latest_notification_id
+
+    # Get notifications
+    notifications = client.Character.get_character_character_id_notifications(
+        character_id=token.character_id,
+        token=token
+    ).results()
+
+    # Set the last notification id for the character
+    char.last_notification_id = notifications[-1]['notification_id']
+    char.save()
+
+    # Filter out notifications that we dont care about
+    notifications = list(
+        filter(
+            lambda n: 'Moonmining' in n['type'] and n['notification_id'] > last_noti,
+            notifications
+        )
+    )
+
+    # Start processing notifications
+    for noti in notifications:
+        if 'Started' in noti['type']:
+            # First parse the text from yaml format.
+            data = yaml.load(noti['text'])
+
+            # Check that the moon has resources associated with it.
+            # (If a scan was never added, it might not)
+            moon = EveMoon.objects.get(id=data['moonID'])
+            res = moon.resources.all().values_list('ore__name', flat=True)
+            missing_res = []
+
+            # Make a list of resources missing from the moon.
+            # This is used in case the data is either incorrect or incomplete.
+            for ore in data['oreVolumeByType']:
+                if ore not in res:
+                    missing_res.append(ore)
+
+            # If there is one or more missing resources, OR if there is a resource in the database
+            # that shouldn't be there. We will assume that these notifications are always authoritative.
+            if len(missing_res) > len(res) or len(missing_res) == len(data['oreVolumeByType']):
+                # Calculate ore percentages, and add resource objects for the moon.
+                total_ore = 0
+                for k, v in data['oreVolumeByType']:
+                    total_ore += int(v)
+                # Create resource objects
+                new_res = []
+                for k, v in data['oreVolumeByType']:
+                    pct = int(v) / total_ore
+                    ore = EveType.objects.get(name=k)
+                    new_res.append(
+                        Resource(moon=moon, ore=ore, quantity=pct)
+                    )
+
+                # Delete old moon resources and create new ones.
+                moon.resources.all().delete()
+                Resource.objects.bulk_create(new_res)
+
+        elif 'Cancelled' in noti['type']:
+            # Determine which extraction event was cancelled and mark it as such.
+            # First Parse the timestamp
+            noti_time = datetime.datetime.strptime(noti['timestamp'], '%Y-%m-%dT%H:%M:%SZ')
+            noti_time = pytz.timezone("UTC").localize(noti_time, is_dst=None)
+
+            # Parse the notification data from yaml
+            data = yaml.load(noti['text'])
+
+            # Get the refinery and list of extractions
+            try:
+                refinery = Refinery.objects.get(structure_id=data['structureID'])
+            except Refinery.DoesNotExist:
+                logger.info(f'Got extraction cancellation notification for refinery not in database. '
+                            f'NID {noti["notification_id"]}')
+                continue
+
+            exts = refinery.extractions.filter(start_time__lt=noti_time, arrival_time__gt=noti_time)\
+                .order_by('-start_time')
+
+            # Cancel the extraction(s).
+            if len(exts) is 1:
+                exts[0].cancelled = True
+                exts[0].save()
+            elif len(exts) > 1:
+                for ext in exts:
+                    if ext.cancelled is not True:
+                        ext.cancelled = True
+                        ext.save()
+            else:
+                logger.info(f'Got extraction cancellation notification for event not in database. '
+                            f'NID {noti["notification_id"]}')
