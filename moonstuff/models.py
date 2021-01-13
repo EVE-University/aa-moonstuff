@@ -36,6 +36,15 @@ class Resource(models.Model):
     quantity = models.DecimalField(max_digits=11, decimal_places=10)
     moon = models.ForeignKey(EveMoon, on_delete=models.CASCADE, related_name='resources')
 
+    @property
+    def rarity(self):
+        """
+        Determine the rarity of the resource by its group_id. (Default is 0)
+        :return:
+        """
+        rs = {1884: 4, 1920: 8, 1921: 16, 1922: 32, 1923: 64}
+        return rs.get(self.ore.eve_group_id, 0)
+
     class Meta:
         default_permissions = ('add',)
 
