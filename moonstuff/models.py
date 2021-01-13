@@ -84,6 +84,8 @@ class Extraction(models.Model):
     refinery = models.ForeignKey(Refinery, on_delete=models.CASCADE, related_name='extractions')
     corp = models.ForeignKey(EveCorporationInfo, on_delete=models.CASCADE, related_name='extractions')
     jackpot = models.BooleanField(null=True)
+    cancelled = models.BooleanField(null=False, default=False)
 
     class Meta:
         default_permissions = (())
+        unique_together = (('arrival_time', 'moon'),)
