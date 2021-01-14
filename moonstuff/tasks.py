@@ -27,7 +27,7 @@ def _get_tokens(scopes):
         tokens = []
         characters = TrackingCharacter.objects.all()
         for character in characters:
-            tokens.append(Token.get_token(character.character_id, scopes))
+            tokens.append(Token.get_token(character.character.character_id, scopes))
         return tokens
     except Exception as e:
         print(e)
@@ -219,18 +219,18 @@ def import_extraction_data():
 
             for event in events:
                 # Get Structure Info
-                moon = EveMoon.objects.get_or_create_esi(event['moon_id'])
+                moon, _ = EveMoon.objects.get_or_create_esi(id=event['moon_id'])
                 try:
                     refinery = Refinery.objects.get(structure_id=event['structure_id'])
                 except Refinery.DoesNotExist:
                     ref = client.Universe.get_universe_structures_structure_id(
                         structure_id=event['structure_id'],
-                        token=token.valid_token()
+                        token=token.valid_access_token()
                     ).results()
                     refinery = Refinery(
-                        structure_id=ref['structure_id'],
+                        structure_id=event['structure_id'],
                         name=ref['name'],
-                        corp=ref['owner_id'],
+                        corp=corp,
                         evetype_id=ref['type_id']
                     )
                     refinery.save()
@@ -259,51 +259,52 @@ def import_extraction_data():
             logger.error(f'Error importing extraction data from {token.character_id}')
             logger.error(e)
 
-        check_notifications.delay(token)
+        check_notifications.delay(token.character_id)
 
 
 @shared_task()
-def check_notifications(token: Token):
+def check_notifications(character_id: int):
     """
     Checks and processes notifications related to moon mining.
         Note: This task does not add extraction events!
-    :param token: A django-esi token object.
+    :param character_id: The character_id to use to get a token.
     :return:
     """
+    logger.debug(f'Checking notifications for {character_id}')
     # Define token and client, ensuring the token is valid.
     client = esi.client
-    token = token.valid_access_token()
-    char = TrackingCharacter.objects.get(character_id=token.character_id)
+    token = Token.get_token(character_id, ESI_CHARACTER_SCOPES)
+    char = EveCharacter.objects.get(character_id=token.character_id)
+    char = TrackingCharacter.objects.get(character=char)
     last_noti = char.latest_notification_id
 
     # Get notifications
-    notifications = client.Character.get_character_character_id_notifications(
-        character_id=token.character_id,
-        token=token
+    notifications = client.Character.get_characters_character_id_notifications(
+        character_id=char.character.character_id,
+        token=token.valid_access_token()
     ).results()
-
     # Set the last notification id for the character
-    char.last_notification_id = notifications[-1]['notification_id']
+    char.latest_notification_id = notifications[-1]['notification_id']
     char.save()
 
     # Filter out notifications that we dont care about
     notifications = list(
         filter(
-            lambda n: 'Moonmining' in n['type'] and n['notification_id'] > last_noti,
+            lambda n: 'Moonmining' in n['type'] and int(n['notification_id']) > last_noti,
             notifications
         )
     )
 
     # Start processing notifications
     for noti in notifications:
-        if 'Started' in noti['type']:
+        if 'Cancelled' not in noti['type']:
             # First parse the text from yaml format.
-            data = yaml.load(noti['text'])
+            data = yaml.safe_load(noti['text'])
 
             # Check that the moon has resources associated with it.
             # (If a scan was never added, it might not)
             moon = EveMoon.objects.get(id=data['moonID'])
-            res = moon.resources.all().values_list('ore__name', flat=True)
+            res = moon.resources.all().values_list('ore_id', flat=True)
             missing_res = []
 
             # Make a list of resources missing from the moon.
@@ -317,15 +318,14 @@ def check_notifications(token: Token):
             if len(missing_res) > len(res) or len(missing_res) == len(data['oreVolumeByType']):
                 # Calculate ore percentages, and add resource objects for the moon.
                 total_ore = 0
-                for k, v in data['oreVolumeByType']:
-                    total_ore += int(v)
+                for k, v in data['oreVolumeByType'].items():
+                    total_ore += v
                 # Create resource objects
                 new_res = []
-                for k, v in data['oreVolumeByType']:
-                    pct = int(v) / total_ore
-                    ore = EveType.objects.get(name=k)
+                for k, v in data['oreVolumeByType'].items():
+                    pct = v / total_ore
                     new_res.append(
-                        Resource(moon=moon, ore=ore, quantity=pct)
+                        Resource(moon=moon, ore_id=k, quantity=pct)
                     )
 
                 # Delete old moon resources and create new ones.
@@ -353,7 +353,7 @@ def check_notifications(token: Token):
                 .order_by('-start_time')
 
             # Cancel the extraction(s).
-            if len(exts) is 1:
+            if len(exts) == 1:
                 exts[0].cancelled = True
                 exts[0].save()
             elif len(exts) > 1:
