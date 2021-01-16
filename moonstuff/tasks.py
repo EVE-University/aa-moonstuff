@@ -24,7 +24,7 @@ logger = get_extension_logger(__name__)
 
 def _get_tokens(scopes):
     try:
-        tokens = []
+        tokens = list()
         characters = TrackingCharacter.objects.all()
         for character in characters:
             tokens.append(Token.get_token(character.character.character_id, scopes))
@@ -305,7 +305,7 @@ def check_notifications(character_id: int):
             # (If a scan was never added, it might not)
             moon = EveMoon.objects.get(id=data['moonID'])
             res = moon.resources.all().values_list('ore_id', flat=True)
-            missing_res = []
+            missing_res = list()
 
             # Make a list of resources missing from the moon.
             # This is used in case the data is either incorrect or incomplete.
@@ -321,7 +321,7 @@ def check_notifications(character_id: int):
                 for k, v in data['oreVolumeByType'].items():
                     total_ore += v
                 # Create resource objects
-                new_res = []
+                new_res = list()
                 for k, v in data['oreVolumeByType'].items():
                     pct = v / total_ore
                     new_res.append(
