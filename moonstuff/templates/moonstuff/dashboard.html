@@ -1,0 +1,150 @@
+{% extends 'moonstuff/base.html' %}
+{% load i18n %}
+
+{% block moon_title %} {% translate 'Dashboard' %} {% endblock %}
+
+{% block moon_block %}
+    <div class="container-fluid">
+        <ul class="nav nav-tabs">
+            <li class="active"><a data-toggle="tab" href="#extractions">Upcoming Extractions</a></li>
+            <li><a data-toggle="tab" href="#moons">List Moons</a></li>
+        </ul>
+        <div class="tab-content panel panel-default" style="border-top-left-radius: 0 !important; border-top-right-radius: 0 !important;">
+            <div id="extractions" class="tab-pane fade in active panel-default">
+                <div class="panel-body">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+            <div id="moons" class="tab-pane fade in panel-default">
+                <div class="panel-body">
+                    <table id="moonList" class="table table-striped" style="width: 100% !important;">
+                        <thead>
+                            <th>Moon</th>
+                            <th>Refinery</th>
+                            <th>Next Extraction</th>
+                            <th>Utilities</th>
+                            <th>Ores</th>
+                        </thead>
+                        <tbody>
+                            {% for moon in moons %}
+                                <tr>
+                                    <td>{{ moon.name }}</td>
+                                    <td>{{ moon|get_refinery_name }}</td>
+                                    <td>{{ moon|get_next_extraction }}</td>
+                                    <td>Coming Soon</td>
+                                    <td>{% for ore in moon.resources.all %}{{ ore.ore.name }} R{{ ore.rarity }} {% endfor %}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_javascript %}
+    {% include 'bundles/datatables-js.html' %}
+    {% include 'bundles/moment-js.html' %}
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@3.10.2/dist/fullcalendar.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@3.10.2/dist/locale-all.min.js"></script>
+{% endblock %}
+{% block extra_css %}
+    {% include 'bundles/datatables-css.html' %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@3.10.2/dist/fullcalendar.min.css">
+    <style>
+        .fc-lbl {
+            margin: 1px !important;
+            float: none !important;
+        }
+        .bgd {
+            background-color: rgba(128, 128, 128, .65);
+        }
+    </style>
+{% endblock %}
+<script>
+{% block extra_script %}
+$(function() {
+    // Define calendar color key
+    let rarColors = {
+        "R0": "#9f3936",
+        "R4": "#b09635",
+        "R8": "#40889b",
+        "R16": "#0cc187",
+        "R32": "#0aab11",
+        "R64": "#801ede",
+    };
+
+    // Build calendar color key
+    let key = "<p style='margin: -1px;'><i>All times are UTC</i></p><br >"
+    for (const [k, v] of Object.entries(rarColors)){
+        key += "<span class='label fc-lbl' style='background-color: "+v+";'>"+k+"</span>"
+    }
+
+    // Define the locale for the calendar
+    let cookie = Object.fromEntries(document.cookie.split('; ').map(v=>v.split('=').map(decodeURIComponent)));
+    try{
+        locale = cookie.django_language.substr(0,2);
+    }
+    catch (RefrenceError) {
+        locale = "en";
+    }
+
+    // Build Calendar
+    $('#calendar').fullCalendar({
+        locale: locale,
+        timezone: 'UTC',
+        now: moment.utc(),
+        defaultView: 'month',
+        themeSystem: 'bootstrap3',
+        events: {{ events|safe }},
+        header: {
+            left: '',
+            center: 'title',
+            right: 'today prev,next',
+        },
+        eventRender: function(event, element, view) {
+            if(event.rarity.length == 0){
+                rarity = "R0";
+            }
+            else {
+               rarity = "R"+Math.max(...event.rarity);
+            }
+
+            element.popover({
+                title: event.moon,
+                content: rarity,
+                trigger: 'hover',
+                placement: 'top',
+                container: 'body'
+            })
+
+            element.css({
+                backgroundColor: rarColors[rarity],
+                borderColor: rarColors[rarity],
+            })
+        },
+        dayRender: function(day, cell) {
+          if(day.isSame(moment.utc(), 'day')){
+              cell[0].classList.remove('alert');
+              cell[0].classList.remove('alert-info');
+              cell[0].classList.add('bgd');
+          }
+        },
+        timeFormat: 'H(:mm)'
+    })
+    // Add the key to the calendar
+    $('#calendar > div.fc-toolbar.fc-header-toolbar > div.fc-left').html(key);
+
+    // DataTable
+    $('#moonList').DataTable({
+        columnDefs: [
+            {
+                targets: [ 4 ],
+                visible: false
+            }
+        ]
+    });
+})
+{% endblock %}
+</script>

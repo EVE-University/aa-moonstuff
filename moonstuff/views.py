@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
@@ -9,7 +11,7 @@ from esi.decorators import token_required
 from allianceauth.eveonline.models import EveCharacter
 
 from .tasks import process_scan
-from .models import Resource, TrackingCharacter
+from .models import Resource, TrackingCharacter, Extraction, EveMoon
 from .providers import ESI_CHARACTER_SCOPES
 
 # Get refine setting
@@ -46,11 +48,47 @@ def _get_moon_value_dict(moon_id: int) -> dict:
     return ret
 
 
+def _get_extraction_dict(limit=None):
+    """
+    Gets a dict of extractions from beginning of the current.
+    :param limit: Number of days out to go. (Default: None - Will grab ALL extractions)
+    :return:
+    """
+    if limit:
+        qs = Extraction.objects.filter(arrival_time__gte=datetime.utcnow().replace(day=1),
+                                       arrival_time__lte=datetime.utcnow()+timedelta(days=limit))
+    else:
+        qs = Extraction.objects.select_related('moon')\
+            .filter(arrival_time__gte=datetime.utcnow().replace(day=1))\
+            .prefetch_related('moon__resources', 'moon__resources__ore', 'refinery')
+
+    ret = [
+        {"title": q.refinery.name,
+         "start": datetime.strftime(q.arrival_time, '%Y-%m-%dT%H:%M:%S%z'),
+         "moon": q.moon.name,
+         "rarity": [r.rarity for r in q.moon.resources.all()]}
+        for q in qs
+    ]
+
+    return ret
+
+
 # Create your views here.
 @login_required
 @permission_required('moonstuff.access_moonstuff')
 def dashboard(request):
-    return render(request, 'moonstuff/base.html')
+    ctx = dict()
+
+    # Get upcoming extraction events
+    events = _get_extraction_dict()
+
+    # Get moons
+    moons = EveMoon.objects.filter(resources__isnull=False).distinct()\
+        .prefetch_related('resources', 'resources__ore', 'extractions', 'extractions__refinery')
+
+    ctx['events'] = events
+    ctx['moons'] = moons
+    return render(request, 'moonstuff/dashboard.html', ctx)
 
 
 @login_required
