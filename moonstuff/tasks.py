@@ -284,7 +284,8 @@ def check_notifications(character_id: int):
         token=token.valid_access_token()
     ).results()
     # Set the last notification id for the character
-    char.latest_notification_id = notifications[0]['notification_id']
+    notifications.reverse()  # We want the newest data last... so reverse the list
+    char.latest_notification_id = notifications[-1]['notification_id']
     char.save()
 
     # Filter out notifications that we dont care about
