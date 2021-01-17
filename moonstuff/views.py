@@ -6,7 +6,6 @@ from django.contrib import messages
 from django.utils.translation import gettext as gt
 from django.conf import settings
 
-from allianceauth.authentication.decorators import permissions_required
 from esi.decorators import token_required
 from allianceauth.eveonline.models import EveCharacter
 
