@@ -304,7 +304,20 @@ def check_notifications(character_id: int):
 
             # Check that the moon has resources associated with it.
             # (If a scan was never added, it might not)
-            moon = EveMoon.objects.get(id=data['moonID'])
+            moon, created = EveMoon.objects.get_or_create_esi(id=data['moonID'])
+            if created:
+                # If the moon was created, then we don't know about the structure yet, so lets create it.
+                owner = client.Universe.get_universe_structures_structure_id(
+                    structure_id=data['structureID'],
+                    token=token.valid_access_token()
+                ).results()['owner_id']
+                ref = Refinery(
+                    structure_id=data['structureID'],
+                    moon_id=data['moonID'],
+                    evetype_id=data['structureTypeID'],
+                    corp_id=owner
+                )
+                ref.save()
             res = moon.resources.all().values_list('ore_id', flat=True)
             missing_res = list()
 
