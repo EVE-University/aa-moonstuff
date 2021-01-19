@@ -57,11 +57,13 @@ def _get_extractions(limit=None):
         qs = Extraction.objects.select_related('moon')\
             .filter(arrival_time__gte=datetime.utcnow().replace(day=1),
                     arrival_time__lte=datetime.utcnow()+timedelta(days=limit))\
-            .prefetch_related('moon__resources', 'moon__resources__ore', 'refinery')
+            .prefetch_related('moon__resources', 'moon__resources__ore', 'refinery')\
+            .order_by('arrival_time')
     else:
         qs = Extraction.objects.select_related('moon')\
             .filter(arrival_time__gte=datetime.utcnow().replace(day=1))\
-            .prefetch_related('moon__resources', 'moon__resources__ore', 'refinery')
+            .prefetch_related('moon__resources', 'moon__resources__ore', 'refinery')\
+            .order_by('arrival_time')
 
     return qs
 
