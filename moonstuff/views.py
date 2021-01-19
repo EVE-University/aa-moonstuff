@@ -84,14 +84,16 @@ def _build_event_dict(qs):
 def dashboard(request):
     ctx = dict()
 
-    # Get upcoming extraction events
-    events = _get_extraction_dict()
+    # Get upcoming extraction events (calendar)
+    extractions = _get_extractions()
+    events = _build_event_dict(extractions)
 
     # Get moons
     moons = EveMoon.objects.filter(resources__isnull=False).distinct()\
         .prefetch_related('resources', 'resources__ore', 'extractions', 'extractions__refinery')
 
     ctx['events'] = events
+    ctx['extractions'] = extractions
     ctx['moons'] = moons
     return render(request, 'moonstuff/dashboard.html', ctx)
 
