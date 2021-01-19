@@ -47,20 +47,26 @@ def _get_moon_value_dict(moon_id: int) -> dict:
     return ret
 
 
-def _get_extraction_dict(limit=None):
+def _get_extractions(limit=None):
     """
     Gets a dict of extractions from beginning of the current.
     :param limit: Number of days out to go. (Default: None - Will grab ALL extractions)
     :return:
     """
     if limit:
-        qs = Extraction.objects.filter(arrival_time__gte=datetime.utcnow().replace(day=1),
-                                       arrival_time__lte=datetime.utcnow()+timedelta(days=limit))
+        qs = Extraction.objects.select_related('moon')\
+            .filter(arrival_time__gte=datetime.utcnow().replace(day=1),
+                    arrival_time__lte=datetime.utcnow()+timedelta(days=limit))\
+            .prefetch_related('moon__resources', 'moon__resources__ore', 'refinery')
     else:
         qs = Extraction.objects.select_related('moon')\
             .filter(arrival_time__gte=datetime.utcnow().replace(day=1))\
             .prefetch_related('moon__resources', 'moon__resources__ore', 'refinery')
 
+    return qs
+
+
+def _build_event_dict(qs):
     ret = [
         {"title": q.refinery.name,
          "start": datetime.strftime(q.arrival_time, '%Y-%m-%dT%H:%M:%S%z'),
