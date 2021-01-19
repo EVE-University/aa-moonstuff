@@ -1,5 +1,6 @@
 {% extends 'moonstuff/base.html' %}
 {% load i18n %}
+{% load evelinks %}
 
 {% block moon_title %} {% translate 'Dashboard' %} {% endblock %}
 
@@ -11,8 +12,55 @@
         </ul>
         <div class="tab-content panel panel-default" style="border-top-left-radius: 0 !important; border-top-right-radius: 0 !important;">
             <div id="extractions" class="tab-pane fade in active panel-default">
-                <div class="panel-body">
-                    <div id="calendar"></div>
+                <div style="margin-left: 15px; margin-top: 10px;">
+                    <ul class="nav nav-pills">
+                        <li class="active"><a data-toggle="tab" href="#exCal">Calendar View</a></li>
+                        <li><a data-toggle="tab" href="#exCard">Card View</a></li>
+                    </ul>
+                </div>
+                <div class="tab-content">
+                    <div id="exCal" class="tab-pane fade in active panel-default">
+                        <div class="panel-body">
+                            <div id="calendar"></div>
+                        </div>
+                    </div>
+                    <div id="exCard" class="tab-pane fade in panel-default">
+                        <div class="panel-body">
+                            <p style="padding-left: 15px;"><i>All times are UTC</i></p>
+                            <div class="flex-container">{% for ext in extractions %}
+                                <div class="col-md-4">
+                                    <div class="panel panel-ext text-center">
+                                        <div class="panel-heading">
+                                            <h4 style="margin-top: 0;">{{ ext.refinery.name }}</h4>
+                                            <h5>{{ ext.moon.name }}</h5>
+                                        </div>
+                                        <div class="panel-body">
+                                            {% for res in ext.moon.resources.all|card_labels %}
+                                                <span class="label bg-R{{ res }}">R{{ res }}</span>
+                                            {% endfor %}
+                                            <hr/>
+                                            <ul style="list-style-type: none; padding-left: 0;">
+                                                <li><strong>Chunk Time: {{ ext|chunk_time }} days</strong></li>
+                                                <li>Chunk Arrival: {{ ext.arrival_time|date:"Y-n-j h:i" }}</li>
+                                                <li>Self Destructs: {{ ext|destruct_time|date:"Y-n-j h:i" }}</li>
+                                            </ul>
+                                            <hr />
+                                            {% for res in ext.moon.resources.all|order_quantity %}
+                                                <img src="{{ res.ore.id|type_icon_url:32 }}" /> {{ res.ore.name }} <span class="label bg-R{{ res.rarity }}">R{{ res.rarity }}</span>
+                                                <div class="progress">
+                                                    <div class="progress-bar progress-bar-danger progress-bar-striped" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{ res.quantity|percent }}%;">
+                                                        <h5 class="media-heading" style="padding-top: 2px">{{ res.quantity|percent }}% </h5>
+                                                    </div>
+                                                </div>
+                                                <br />
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div id="moons" class="tab-pane fade in panel-default">
@@ -53,12 +101,69 @@
     {% include 'bundles/datatables-css.html' %}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@3.10.2/dist/fullcalendar.min.css">
     <style>
+        :root {
+            --R0: #9f3936;
+            --R4: #b09635;
+            --R8: #40889b;
+            --R16: #0cc187;
+            --R32: #0aab11;
+            --R64: #801ede;
+            --ext: #c87936;
+        }
+        .panel-ext {
+            border-radius: 0;
+            border: 0;
+        }
+        .panel-ext .panel-heading {
+            border-radius: 0;
+            background-color: var(--ext);
+            color: white;
+        }
+        .template-light-mode .panel-ext .panel-body {
+            background: #ECF0F1;
+        }
+        .template-dark-mode .panel-ext .panel-body {
+            background: #383838;
+        }
+        .progress{
+            background: #bfbfbf;
+            margin-left: 20%;
+            margin-right: 20%;
+            margin-bottom: 0;
+            height: 20px;
+        }
+        .flex-container {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: space-evenly;
+            align-items: flex-start;
+            align-content: space-around;
+        }
         .fc-lbl {
             margin: 1px !important;
             float: none !important;
         }
         .bgd {
             background-color: rgba(128, 128, 128, .65);
+        }
+        .bg-R0 {
+            background-color: var(--R0);
+        }
+        .bg-R4 {
+            background-color: var(--R4);
+        }
+        .bg-R8 {
+            background-color: var(--R8);
+        }
+        .bg-R16 {
+            background-color: var(--R16);
+        }
+        .bg-R32 {
+            background-color: var(--R32);
+        }
+        .bg-R64 {
+            background-color: var(--R64);
         }
     </style>
 {% endblock %}
@@ -67,18 +172,18 @@
 $(function() {
     // Define calendar color key
     let rarColors = {
-        "R0": "#9f3936",
-        "R4": "#b09635",
-        "R8": "#40889b",
-        "R16": "#0cc187",
-        "R32": "#0aab11",
-        "R64": "#801ede",
+        "R0": "bg-R0",
+        "R4": "bg-R4",
+        "R8": "bg-R8",
+        "R16": "bg-R16",
+        "R32": "bg-R32",
+        "R64": "bg-R64",
     };
 
     // Build calendar color key
     let key = "<p style='margin: -1px;'><i>All times are UTC</i></p><br >"
     for (const [k, v] of Object.entries(rarColors)){
-        key += "<span class='label fc-lbl' style='background-color: "+v+";'>"+k+"</span>"
+        key += "<span class='label fc-lbl "+v+"'>"+k+"</span>"
     }
 
     // Define the locale for the calendar
@@ -120,8 +225,8 @@ $(function() {
             })
 
             element.css({
-                backgroundColor: rarColors[rarity],
-                borderColor: rarColors[rarity],
+                backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--'+rarity),
+                borderColor: getComputedStyle(document.documentElement).getPropertyValue('--'+rarity),
             })
         },
         dayRender: function(day, cell) {
