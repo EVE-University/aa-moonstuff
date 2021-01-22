@@ -305,6 +305,18 @@ def check_notifications(character_id: int):
             # Check that the moon has resources associated with it.
             # (If a scan was never added, it might not)
             moon, created = EveMoon.objects.get_or_create_esi(id=data['moonID'])
+
+            # Select the relevant extraction if applicable
+            extractions = Extraction.objects.filter(
+                arrival_time=datetime.datetime.utcfromtimestamp(data['readyTime']),
+                cancelled=False,
+                moon=moon
+            )
+            if len(extractions) == 0 or len(extractions) > 1:
+                extraction = None
+            else:
+                extraction = extractions[0]
+
             if created:
                 # If the moon was created, then we don't know about the structure yet, so lets create it.
                 owner = client.Universe.get_universe_structures_structure_id(
@@ -327,13 +339,19 @@ def check_notifications(character_id: int):
                 if ore not in res:
                     missing_res.append(ore)
 
+            # Calculate the total volume of ore
+            total_ore = 0
+            for k, v in data['oreVolumeByType'].items():
+                total_ore += v
+            # Update the total volume of ore for the extraction
+            if extraction is not None:
+                extraction.total_volume = total_ore
+                extraction.save()
+
             # If there is one or more missing resources, OR if there is a resource in the database
             # that shouldn't be there. We will assume that these notifications are always authoritative.
             if len(missing_res) > len(res) or len(missing_res) == len(data['oreVolumeByType']):
                 # Calculate ore percentages, and add resource objects for the moon.
-                total_ore = 0
-                for k, v in data['oreVolumeByType'].items():
-                    total_ore += v
                 # Create resource objects
                 new_res = list()
                 for k, v in data['oreVolumeByType'].items():
