@@ -54,6 +54,7 @@ class Refinery(models.Model):
     evetype = models.ForeignKey(EveType, on_delete=models.CASCADE)
     name = models.CharField(null=True, max_length=255)  # Might not actually need this.
     corp = models.ForeignKey(EveCorporationInfo, on_delete=models.CASCADE, related_name='refineries')
+    observer = models.BooleanField(default=True)
 
     def __str__(self):
         if self.name is None:
