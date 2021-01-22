@@ -175,7 +175,7 @@ $(function() {
 
             element.popover({
                 title: event.moon,
-                content: rarity,
+                content: "Click for more details!",
                 trigger: 'hover',
                 placement: 'top',
                 container: 'body'
@@ -214,6 +214,7 @@ $(function() {
         ]
     });
 
+    // Ajax Modals
     $('#moonModal').on('show.bs.modal', function (e) {
        var modal = $(e.target);
        var title = modal.find('.modal-title').empty();
@@ -235,6 +236,7 @@ $(function() {
 
     });
 
+    // Activate datatables in modals.
     $('#moonModal').on('shown.bs.modal', function() {
         console.log("Test");
         $('#test').DataTable({
