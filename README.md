@@ -26,6 +26,6 @@ include the following scopes in your ESI application.
 
 | Scope | Purpose |
 |-------|---------|
-|esi-industry.read_corporation_mining.v1| This is required to pull corporation moon extraction data. (The in-game Station_Manager role is required) |
+|esi-industry.read_corporation_mining.v1| This is required to pull corporation moon extraction data. (The in-game Station_Manager and Accountant roles are required) |
 |esi-universe.read_structures.v1 | Required to pull structure names. |
 |esi-characters.read_notifications.v1| Required to pull character notifications used for updating resource data. |
