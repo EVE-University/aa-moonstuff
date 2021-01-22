@@ -45,16 +45,6 @@ def chunk_time(extraction):
 
 
 @register.filter()
-def destruct_time(extraction):
-    """
-    Returns the self-destruct time for the extraction.
-    :param extraction: Extraction model object.
-    :return:
-    """
-    return extraction.arrival_time+timedelta(hours=3)
-
-
-@register.filter()
 def percent(quantity: float):
     """
     Converts decimal to percent.

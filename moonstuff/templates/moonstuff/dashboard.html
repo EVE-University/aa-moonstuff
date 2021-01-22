@@ -46,7 +46,7 @@
                                             <ul style="list-style-type: none; padding-left: 0;">
                                                 <li><strong>Chunk Time: {{ ext|chunk_time }} days</strong></li>
                                                 <li>Chunk Arrival: {{ ext.arrival_time|date:"Y-n-j h:i" }}</li>
-                                                <li>Self Destructs: {{ ext|destruct_time|date:"Y-n-j h:i" }}</li>
+                                                <li>Self Destructs: {{ ext.decay_time|date:"Y-n-j h:i" }}</li>
                                             </ul>
                                             <hr />
                                             {% for res in ext.moon.resources.all|order_quantity %}
