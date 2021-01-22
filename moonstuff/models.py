@@ -86,7 +86,7 @@ class Extraction(models.Model):
     corp = models.ForeignKey(EveCorporationInfo, on_delete=models.CASCADE, related_name='extractions')
     cancelled = models.BooleanField(null=False, default=False)
     jackpot = models.BooleanField(null=True)
-    depleted = models.BooleanField(null=True)
+    active = models.BooleanField(default=False)
     total_volume = models.BigIntegerField(null=True)
 
     class Meta:
