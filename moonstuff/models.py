@@ -92,3 +92,15 @@ class Extraction(models.Model):
     class Meta:
         default_permissions = (())
         unique_together = (('start_time', 'moon'),)
+
+
+class LedgerEntry(models.Model):
+    observer = models.ForeignKey(Refinery, on_delete=models.CASCADE, related_name='entries')
+    character_id = models.IntegerField()  # There is no guarantee that we will have a character object for this.
+    last_updated = models.DateField()
+    quantity = models.BigIntegerField()
+    recorded_corporation_id = models.IntegerField()
+    evetype = models.ForeignKey(EveType, on_delete=models.CASCADE)
+
+    class Meta:
+        default_permissions = (())
