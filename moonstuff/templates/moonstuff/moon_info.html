@@ -1,0 +1,31 @@
+{% extends 'moonstuff/base.html' %}
+{% load i18n %}
+{% load evelinks %}
+
+{% block moon_title %} {% translate 'Moon Info' %} - {{ moon.name }} {% endblock %}
+
+{% block moon_block %}
+    {% include 'moonstuff/moon_info_ajax.html' %}
+{% endblock %}
+
+{% block extra_javascript %}
+    {% include 'bundles/datatables-js.html' %}
+    {% include 'bundles/moment-js.html' %}
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="/static/moonstuff/css/style.css">
+    {% include 'bundles/datatables-css.html' %}
+{% endblock %}
+
+<script>
+    {% block extra_script %}
+        $(function() {
+                $('#test').DataTable({
+                    'bFilter': false,
+                    "sScrollY": "220px",
+                    "bPaginate": false
+                });
+            });
+    {% endblock %}
+</script>

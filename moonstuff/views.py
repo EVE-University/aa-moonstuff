@@ -8,10 +8,13 @@ from django.conf import settings
 
 from esi.decorators import token_required
 from allianceauth.eveonline.models import EveCharacter
+from allianceauth.services.hooks import get_extension_logger
 
 from .tasks import process_scan
 from .models import Resource, TrackingCharacter, Extraction, EveMoon
 from .providers import ESI_CHARACTER_SCOPES
+
+logger = get_extension_logger(__name__)
 
 # Get refine setting
 refine = .876
@@ -56,12 +59,14 @@ def _get_extractions(limit=None):
     if limit:
         qs = Extraction.objects.select_related('moon')\
             .filter(arrival_time__gte=datetime.utcnow().replace(day=1),
-                    arrival_time__lte=datetime.utcnow()+timedelta(days=limit))\
+                    arrival_time__lte=datetime.utcnow()+timedelta(days=limit),
+                    cancelled=False)\
             .prefetch_related('moon__resources', 'moon__resources__ore', 'refinery')\
             .order_by('arrival_time')
     else:
         qs = Extraction.objects.select_related('moon')\
-            .filter(arrival_time__gte=datetime.utcnow().replace(day=1))\
+            .filter(arrival_time__gte=datetime.utcnow().replace(day=1),
+                    cancelled=False)\
             .prefetch_related('moon__resources', 'moon__resources__ore', 'refinery')\
             .order_by('arrival_time')
 
@@ -73,7 +78,8 @@ def _build_event_dict(qs):
         {"title": q.refinery.name,
          "start": datetime.strftime(q.arrival_time, '%Y-%m-%dT%H:%M:%S%z'),
          "moon": q.moon.name,
-         "rarity": [r.rarity for r in q.moon.resources.all()]}
+         "rarity": [r.rarity for r in q.moon.resources.all()],
+         "moon_id": q.moon.id}
         for q in qs
     ]
 
@@ -84,6 +90,11 @@ def _build_event_dict(qs):
 @login_required
 @permission_required('moonstuff.access_moonstuff')
 def dashboard(request):
+    """
+    The main view for moonstuff.
+    :param request: HTTPRequest object
+    :return:
+    """
     ctx = dict()
 
     # Get upcoming extraction events (calendar)
@@ -105,7 +116,7 @@ def dashboard(request):
 def add_scan(request):
     """
     View for adding moon scan data.
-    :param request:
+    :param request: HTTPRequest object
     :return:
     """
     if request.method == 'POST':
@@ -122,8 +133,42 @@ def add_scan(request):
 @token_required(scopes=ESI_CHARACTER_SCOPES)
 @permission_required('moonstuff.add_trackingcharacter')
 def add_character(request, token):
+    """
+    View for adding tracking character and corresponding token.
+    :param request: HTTPRequest object
+    :param token: django-esi Token object
+    :return:
+    """
     messages.success(request, 'Character added!')
     eve_char = EveCharacter.objects.get(character_id=token.character_id)
     char = TrackingCharacter(character=eve_char)
     char.save()
     return redirect('moonstuff:dashboard')
+
+
+@login_required
+@permission_required('moonstuff.access_moonstuff')
+def moon_info(request, moon_id=None):
+    """
+    View for viewing a moon's data.
+    :param request: HTTPRequest object
+    :param moon_id: integer
+    :return:
+    """
+    ctx = {}
+    if moon_id is None:
+        messages.error(request, gt("Please provide the ID of a moon to view it's data."))
+        return redirect('moonstuff:dashboard')
+
+    # Get moon
+    try:
+        moon = EveMoon.objects.filter(id=moon_id, resources__isnull=False)\
+            .prefetch_related('extractions', 'extractions__refinery', 'resources', 'resources__ore')[0]
+        ctx['moon'] = moon
+    except EveMoon.DoesNotExist:
+        messages.error(request, gt('A moon matching the provided ID could not be found.'))
+        return redirect('moonstuff:dashboard')
+
+    if request.is_ajax():
+        return render(request, 'moonstuff/moon_info_ajax.html', ctx)
+    return render(request, 'moonstuff/moon_info.html', ctx)
