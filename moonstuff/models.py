@@ -83,8 +83,10 @@ class Extraction(models.Model):
     moon = models.ForeignKey(EveMoon, on_delete=models.CASCADE, related_name='extractions')
     refinery = models.ForeignKey(Refinery, on_delete=models.CASCADE, related_name='extractions')
     corp = models.ForeignKey(EveCorporationInfo, on_delete=models.CASCADE, related_name='extractions')
-    jackpot = models.BooleanField(null=True)
     cancelled = models.BooleanField(null=False, default=False)
+    jackpot = models.BooleanField(null=True)
+    depleted = models.BooleanField(null=True)
+    total_volume = models.BigIntegerField(null=True)
 
     class Meta:
         default_permissions = (())
