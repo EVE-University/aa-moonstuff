@@ -88,4 +88,4 @@ class Extraction(models.Model):
 
     class Meta:
         default_permissions = (())
-        unique_together = (('arrival_time', 'moon'),)
+        unique_together = (('start_time', 'moon'),)
