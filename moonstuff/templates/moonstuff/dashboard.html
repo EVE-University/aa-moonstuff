@@ -31,8 +31,12 @@
                                 <div class="col-md-4">
                                     <div class="panel panel-ext text-center">
                                         <div class="panel-heading">
-                                            <h4 style="margin-top: 0;">{{ ext.refinery.name }}</h4>
-                                            <h5>{{ ext.moon.name }}</h5>
+                                            <a class="info-link" href="#" data-toggle="modal" data-target="#moonModal" data-url="{% url 'moonstuff:view_moon' ext.moon.id %}">
+                                                <h4 style="margin-top: 0;">
+                                                    {{ ext.refinery.name }}
+                                                </h4>
+                                                <h5>{{ ext.moon.name }}</h5>
+                                            </a>
                                         </div>
                                         <div class="panel-body">
                                             {% for res in ext.moon.resources.all|card_labels %}
@@ -49,7 +53,7 @@
                                                 <img src="{{ res.ore.id|type_icon_url:32 }}" /> {{ res.ore.name }} <span class="label bg-R{{ res.rarity }}">R{{ res.rarity }}</span>
                                                 <div class="progress">
                                                     <div class="progress-bar progress-bar-danger progress-bar-striped" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{ res.quantity|percent }}%;">
-                                                        <h5 class="media-heading" style="padding-top: 2px">{{ res.quantity|percent }}% </h5>
+                                                        <h5 class="media-heading percent">{{ res.quantity|percent }}% </h5>
                                                     </div>
                                                 </div>
                                                 <br />
@@ -89,6 +93,23 @@
             </div>
         </div>
     </div>
+    {# Modal #}
+    <div class="modal fade" tabindex="-1" role="dialog" id="moonModal" style="display: none;" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title"></h4>
+                </div>
+                <div class="modal-body">
+                    <div class="container-fluid" id="moonModalBody">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {# End Modal #}
 {% endblock %}
 
 {% block extra_javascript %}
@@ -100,73 +121,9 @@
 {% block extra_css %}
     {% include 'bundles/datatables-css.html' %}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@3.10.2/dist/fullcalendar.min.css">
-    <style>
-        :root {
-            --R0: #9f3936;
-            --R4: #b09635;
-            --R8: #40889b;
-            --R16: #0cc187;
-            --R32: #0aab11;
-            --R64: #801ede;
-            --ext: #c87936;
-        }
-        .panel-ext {
-            border-radius: 0;
-            border: 0;
-        }
-        .panel-ext .panel-heading {
-            border-radius: 0;
-            background-color: var(--ext);
-            color: white;
-        }
-        .template-light-mode .panel-ext .panel-body {
-            background: #ECF0F1;
-        }
-        .template-dark-mode .panel-ext .panel-body {
-            background: #383838;
-        }
-        .progress{
-            background: #bfbfbf;
-            margin-left: 20%;
-            margin-right: 20%;
-            margin-bottom: 0;
-            height: 20px;
-        }
-        .flex-container {
-            display: flex;
-            flex-direction: row;
-            flex-wrap: wrap;
-            justify-content: space-evenly;
-            align-items: flex-start;
-            align-content: space-around;
-        }
-        .fc-lbl {
-            margin: 1px !important;
-            float: none !important;
-        }
-        .bgd {
-            background-color: rgba(128, 128, 128, .65);
-        }
-        .bg-R0 {
-            background-color: var(--R0);
-        }
-        .bg-R4 {
-            background-color: var(--R4);
-        }
-        .bg-R8 {
-            background-color: var(--R8);
-        }
-        .bg-R16 {
-            background-color: var(--R16);
-        }
-        .bg-R32 {
-            background-color: var(--R32);
-        }
-        .bg-R64 {
-            background-color: var(--R64);
-        }
-    </style>
+    <link rel="stylesheet" href="/static/moonstuff/css/style.css">
 {% endblock %}
+
 <script>
 {% block extra_script %}
 $(function() {
@@ -228,6 +185,12 @@ $(function() {
                 backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--'+rarity),
                 borderColor: getComputedStyle(document.documentElement).getPropertyValue('--'+rarity),
             })
+
+            element.attr('data-toggle', 'modal');
+            element.attr('data-target', '#moonModal');
+            element.attr('data-url', '/moons/info/'+event.moon_id);
+            element.attr('href', '#');
+
         },
         dayRender: function(day, cell) {
           if(day.isSame(moment.utc(), 'day')){
@@ -250,6 +213,37 @@ $(function() {
             }
         ]
     });
+
+    $('#moonModal').on('show.bs.modal', function (e) {
+       var modal = $(e.target);
+       var title = modal.find('.modal-title').empty();
+       var head = modal.find('.modal-header');
+       var body = modal.find('#moonModalBody').empty();
+       let cancel = false;
+
+       $.ajax($(e.relatedTarget).data('url'))
+         .done(function (data){
+             title.html($(data).find('#title'));
+             body.html($(data).find('#content'));
+         })
+         .fail(function (xhr, status, errorThrown) {
+             head.addClass('bg-danger');
+             body.addClass('bg-danger');
+             title.html("Error!");
+             body.html("There was an error loading the data for the requested moon.");
+         });
+
+    });
+
+    $('#moonModal').on('shown.bs.modal', function() {
+        console.log("Test");
+        $('#test').DataTable({
+            'bFilter': false,
+            "sScrollY": "220px",
+            "bPaginate": false
+        });
+    })
+
 })
 {% endblock %}
 </script>
