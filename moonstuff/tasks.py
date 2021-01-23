@@ -23,9 +23,32 @@ logger = get_extension_logger(__name__)
 
 
 def _get_tokens(scopes):
+    """
+    Gets all tokens with matching scopes.
+    :param scopes:
+    :return:
+    """
     try:
         tokens = list()
         characters = TrackingCharacter.objects.all()
+        for character in characters:
+            tokens.append(Token.get_token(character.character.character_id, scopes))
+        return tokens
+    except Exception as e:
+        print(e)
+        return False
+
+
+def _get_corp_tokens(corp_id, scopes):
+    """
+    Gets all tokens with matching corp and scopes.
+    :param corp_id: integer
+    :param scopes: list(String)
+    :return:
+    """
+    try:
+        tokens = list()
+        characters = TrackingCharacter.objects.filter(character__corporation_id=corp_id)
         for character in characters:
             tokens.append(Token.get_token(character.character.character_id, scopes))
         return tokens
@@ -396,3 +419,51 @@ def check_notifications(character_id: int):
             else:
                 logger.info(f'Got extraction cancellation notification for event not in database. '
                             f'NID {noti["notification_id"]}')
+
+
+@shared_task()
+def update_observers():
+    """
+    Updates the observer status of all refineries.
+    :return:
+    """
+
+    client = esi.client
+
+    corps = Refinery.objects.all().values_list('corp__corporation_id', flat=True)
+    # Build a dict of tokens to try for each corp.
+    tokens = dict()
+    for corp in corps:
+        ts = _get_corp_tokens(corp, ESI_CHARACTER_SCOPES)
+        if ts:
+            tokens[corp] = ts
+
+    for corp in tokens:
+        observers = None
+        # Get corp refineries
+        refineries = Refinery.objects.filter(corp__corporation_id=corp)
+        if len(tokens[corp]) == 0:
+            # If we have no tokens for this corp, none of the refineries are valid observers
+            for ref in refineries:
+                ref.observer = False
+                ref.save()
+            continue
+
+        for token in tokens[corp]:
+            try:
+                observers = client.Industry.get_corporation_corporation_id_mining_observers(
+                    corporation_id=corp,
+                    token=token.valid_access_token()
+                ).results()
+                # We can break the loop once we have a working token.
+                break
+            except Exception as e:
+                continue
+        if observers is not None:
+            observer_ids = [observer['observer_id'] for observer in observers]
+            for ref in refineries:
+                # By default refineries are created assuming they are observers, so we only need to check
+                # if they are missing from the list.
+                if ref.structure_id not in observer_ids:
+                    ref.observer = False
+                    ref.save()
