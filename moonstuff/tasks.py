@@ -350,6 +350,7 @@ def check_notifications(character_id: int):
                     structure_id=data['structureID'],
                     moon_id=data['moonID'],
                     evetype_id=data['structureTypeID'],
+                    name=data['structureName'],
                     corp_id=owner
                 )
                 ref.save()
