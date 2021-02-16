@@ -423,6 +423,59 @@ def check_notifications(character_id: int):
 
 
 @shared_task()
+def update_refineries():
+    """
+    Updates the names and observer status of all refineries.
+    :return:
+    """
+    update_names.delay()
+    update_observers.delay()
+
+
+@shared_task()
+def update_names():
+    """
+    Updates the names of refineries.
+    :return:
+    """
+
+    client = esi.client
+
+    corps = Refinery.objects.all().values_list('corp__corporation_id', flat=True)
+    # Build a dict of tokens to try for each corp.
+    tokens = dict()
+    for corp in corps:
+        ts = _get_corp_tokens(corp, ESI_CHARACTER_SCOPES)
+        if ts:
+            tokens[corp] = ts
+
+    for corp in tokens:
+        refs = Refinery.objects.filter(corp__corporation_id=corp)
+
+        # If we have no tokens for this corp, we cant update the names... append '[STALE]' to structure names.
+        if len(tokens[corp]) == 0:
+            logger.info(f"No valid moon tracking tokens for CorpID: {corp}! Marking structures as STALE.")
+            for ref in refs:
+                ref.name += " [STALE]"
+                ref.save()
+            continue
+
+        for ref in refs:
+            for token in tokens[corp]:
+                try:
+                    esi_ref = client.Universe.get_universe_structures_structure_id(
+                        structure_id=ref['structure_id'],
+                        token=token.valid_access_token()
+                    ).results()
+                    ref.name = esi_ref['name']
+                    ref.save()
+                    # Break the loop once we have successfully updated with a valid token
+                    break
+                except Exception as e:
+                    continue
+
+
+@shared_task()
 def update_observers():
     """
     Updates the observer status of all refineries.
