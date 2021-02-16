@@ -220,16 +220,16 @@ $(function() {
        var title = modal.find('.modal-title').empty();
        var head = modal.find('.modal-header');
        var body = modal.find('#moonModalBody').empty();
-       let cancel = false;
 
        $.ajax($(e.relatedTarget).data('url'))
          .done(function (data){
+             modal.find('.modal-body').removeClass('bg-danger')
              title.html($(data).find('#title'));
              body.html($(data).find('#content'));
          })
          .fail(function (xhr, status, errorThrown) {
              head.addClass('bg-danger');
-             body.addClass('bg-danger');
+             modal.find('.modal-body').addClass('bg-danger');
              title.html("Error!");
              body.html("There was an error loading the data for the requested moon.");
          });
@@ -238,7 +238,6 @@ $(function() {
 
     // Activate datatables in modals.
     $('#moonModal').on('shown.bs.modal', function() {
-        console.log("Test");
         $('#test').DataTable({
             'bFilter': false,
             "sScrollY": "220px",
