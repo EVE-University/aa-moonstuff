@@ -16,7 +16,8 @@ from django.utils.translation import gettext as gt
 from esi.models import Token
 
 from .providers import esi, ESI_CHARACTER_SCOPES
-from .models import Material, MaterialCheckSum, EveType, Resource, EveMoon, TrackingCharacter, Refinery, Extraction
+from .models import \
+    Material, MaterialCheckSum, EveType, Resource, EveMoon, TrackingCharacter, Refinery, Extraction, LedgerEntry
 from .parser import ScanParser
 
 logger = get_extension_logger(__name__)
@@ -521,3 +522,60 @@ def update_observers():
                 if ref.structure_id not in observer_ids:
                     ref.observer = False
                     ref.save()
+
+
+@shared_task()
+def update_ledger():
+    """
+    Pulls mining ledger data from observers.
+    :return:
+    """
+    client = esi.client
+
+    corps = Refinery.objects.filter(observer=True).values_list('corp__corporation_id', flat=True)
+
+    # Build a dict of tokens for each corp that can be tried.
+    tokens = dict()
+    for corp in corps:
+        ts = _get_corp_tokens(corp, ESI_CHARACTER_SCOPES)
+        if ts:
+            tokens[corp] = ts
+
+    for corp in tokens:
+        if len(tokens[corp]) == 0:
+            # This should never happen, but we should still make sure to handle it.
+            continue
+        # Get the observers for the current corp.
+        observers = Refinery.objects.filter(observer=True, corp__corporation_id=corp)
+
+        for observer in observers:
+            # Reset ledger to an empty tuple on each iteration of the loop.
+            ledger = ()
+            for token in tokens[corp]:
+                # Try to get the ledger with each token until one works.
+                try:
+                    ledger = client.Industry.get_corporation_corporation_id_mining_observers_observer_id(
+                        corporation_id=corp,
+                        observer_id=observer.structure_id,
+                        token=token.valid_access_token()
+                    ).results()
+                    # Once a working token has been found/used we can break the token loop.
+                    break
+                except Exception as e:
+                    # If no working token is found, we will just skip this observer. The next
+                    # update structure task should catch and handle this.
+                    logger.debug(f"Exception getting ledger entries using token: {token}")
+                    logger.debug(e)
+                    continue
+
+            if len(ledger) != 0:
+                entries = []
+                for entry in ledger:
+                    # Change the type_id to be evetype
+                    entry['evetype_id'] = entry.pop('type_id')
+                    try:
+                        LedgerEntry.objects.update_or_create(observer=observer, **entry)
+                    except Exception as e:
+                        logger.debug(f"Error creating entry: {entry}")
+                        logger.debug(e)
+                        continue
