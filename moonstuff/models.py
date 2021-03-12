@@ -104,3 +104,5 @@ class LedgerEntry(models.Model):
 
     class Meta:
         default_permissions = (())
+        # For each observer we only want one record per day per character per ore type.
+        unique_together = (('observer', 'last_updated', 'character_id', 'evetype'),)
