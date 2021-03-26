@@ -17,8 +17,8 @@ class ScanParser:
         """
         ret = dict()
 
-        # Split the scan into lines
-        scan_lines = self.scan.split("\n")
+        # Split the scan into lines, ensure any CR characters are removed.
+        scan_lines = self.scan.strip("\r").split("\n")
 
         # Remove any header lines (including moon names)
         scan_lines = list(line for line in scan_lines if "Moon" not in line)
