@@ -465,7 +465,7 @@ def update_names():
             for token in tokens[corp]:
                 try:
                     esi_ref = client.Universe.get_universe_structures_structure_id(
-                        structure_id=ref['structure_id'],
+                        structure_id=ref.structure_id,
                         token=token.valid_access_token()
                     ).results()
                     ref.name = esi_ref['name']
