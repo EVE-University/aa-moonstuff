@@ -473,6 +473,8 @@ def update_names():
                     # Break the loop once we have successfully updated with a valid token
                     break
                 except Exception as e:
+                    logger.debug(f"Unable to get structure name with token: {token}")
+                    logger.debug(e)
                     continue
 
 
@@ -513,6 +515,8 @@ def update_observers():
                 # We can break the loop once we have a working token.
                 break
             except Exception as e:
+                logger.debug(f"Exception getting observer with token: {token}")
+                logger.debug(e)
                 continue
         if observers is not None:
             observer_ids = [observer['observer_id'] for observer in observers]
@@ -563,7 +567,7 @@ def update_ledger():
                     break
                 except Exception as e:
                     # If no working token is found, we will just skip this observer. The next
-                    # update structure task should catch and handle this.
+                    # update refinery task should catch and handle this.
                     logger.debug(f"Exception getting ledger entries using token: {token}")
                     logger.debug(e)
                     continue
