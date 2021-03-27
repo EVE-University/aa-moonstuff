@@ -111,7 +111,7 @@ class LedgerEntry(models.Model):
     last_updated = models.DateField()
     quantity = models.BigIntegerField()
     recorded_corporation_id = models.IntegerField()
-    evetype = models.ForeignKey(EveType, on_delete=models.CASCADE)
+    evetype = models.ForeignKey(EveType, on_delete=models.CASCADE, related_name='ledger_entries')
 
     class Meta:
         default_permissions = (())
