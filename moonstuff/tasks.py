@@ -336,11 +336,46 @@ def check_notifications(character_id: int):
             moon, created = EveMoon.objects.get_or_create_esi(id=data['moonID'])
 
             # Select the relevant extraction if applicable
-            extractions = Extraction.objects.filter(
-                arrival_time=datetime.datetime.utcfromtimestamp(data['readyTime']),
-                cancelled=False,
-                moon=moon
-            )
+            if 'Finished' in noti['type']:
+                # We have decay time
+                extractions = Extraction.objects.filter(
+                    decay_time=filetime_to_dt(data['autoTime']).replace(tzinfo=pytz.utc),
+                    cancelled=False,
+                    moon=moon
+                )
+                logger.debug(f"Type: {noti['type']} ID {noti['notification_id']} :: {extractions}")
+            elif 'Fracture' in noti['type']:
+                # We only have notification time
+                # If the moon auto fractured then the decay time was at or before the notification, and the
+                # arrival time was roughly 3 hours before that. (Allowing for a 5 minute window of error on notification
+                # time)
+                extractions = Extraction.objects.filter(
+                    arrival_time__gte=noti['timestamp'] - datetime.timedelta(hours=3, minutes=5),
+                    decay_time__lte=noti['timestamp'],
+                    cancelled=False,
+                    moon=moon
+                )
+                logger.debug(f"Type: {noti['type']} ID {noti['notification_id']} :: {extractions}")
+            elif 'Fired' in noti['type']:
+                # We only have notification time
+                # If the laser was manually fired than it must be after the arrival time, but
+                # before the decay time.
+                extractions = Extraction.objects.filter(
+                    arrival_time__lte=noti['timestamp'],
+                    decay_time__gte=noti['timestamp'],
+                    cancelled=False,
+                    moon=moon
+                )
+                logger.debug(f"Type: {noti['type']} ID {noti['notification_id']} :: {extractions}")
+            else:
+                # We have arrival time
+                logger.debug(f"ELSE {noti['type']} ID {noti['notification_id']}")
+                extractions = Extraction.objects.filter(
+                    arrival_time=filetime_to_dt(data['readyTime']).replace(tzinfo=pytz.utc),
+                    cancelled=False,
+                    moon=moon
+                )
+
             if len(extractions) == 0 or len(extractions) > 1:
                 extraction = None
             else:
