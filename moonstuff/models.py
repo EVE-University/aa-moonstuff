@@ -89,6 +89,7 @@ class Extraction(models.Model):
     cancelled = models.BooleanField(null=False, default=False)
     jackpot = models.BooleanField(default=False)
     active = models.BooleanField(default=False)
+    depleted = models.BooleanField(default=False)
     total_volume = models.BigIntegerField(null=True)
 
     @property

@@ -668,6 +668,7 @@ def update_active_extractions():
                 .annotate(volume=Sum(F('quantity') * F('evetype__volume'), output_field=BigIntegerField()))\
                 .aggregate(mined_volume=Sum('volume'))
             if entries['mined_volume'] >= extraction.total_volume:
+                extraction.depleted = True
                 extraction.active = False
 
         extraction.save()
