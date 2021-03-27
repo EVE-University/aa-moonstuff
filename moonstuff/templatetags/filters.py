@@ -1,6 +1,7 @@
 from django.template.defaulttags import register
 from django.utils import timezone
 from datetime import datetime, timedelta
+import pytz
 
 
 @register.filter()
@@ -22,6 +23,17 @@ def get_next_extraction(moon):
     if ext_arrival > now:
         return datetime.strftime(exts[-1].arrival_time, '%Y-%m-%d %H:%M')
     return ''
+
+
+@register.filter()
+def check_visibility(extraction):
+    """
+    Returns true if extraction should *not* be visible.
+    :param extraction:
+    :return:
+    """
+    return (not extraction.active and datetime.utcnow().replace(tzinfo=pytz.utc) > extraction.despawn) \
+           or extraction.depleted
 
 
 @register.filter()
