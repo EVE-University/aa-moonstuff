@@ -1,4 +1,6 @@
 from django.db import models
+from datetime import timedelta
+
 
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from eveuniverse.models import EveMoon, EveType
@@ -85,9 +87,18 @@ class Extraction(models.Model):
     refinery = models.ForeignKey(Refinery, on_delete=models.CASCADE, related_name='extractions')
     corp = models.ForeignKey(EveCorporationInfo, on_delete=models.CASCADE, related_name='extractions')
     cancelled = models.BooleanField(null=False, default=False)
-    jackpot = models.BooleanField(null=True)
+    jackpot = models.BooleanField(default=False)
     active = models.BooleanField(default=False)
     total_volume = models.BigIntegerField(null=True)
+
+    @property
+    def despawn(self):
+        """
+        Returns the latest despawn time. Actual despawn can be up to -3h from returned time depending on when the
+            moon drill laser was fired. Actual despawn should never occur after returned time however.
+        :return:
+        """
+        return self.decay_time + timedelta(hours=48)
 
     class Meta:
         default_permissions = (())
