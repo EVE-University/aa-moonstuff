@@ -343,7 +343,6 @@ def check_notifications(character_id: int):
                     cancelled=False,
                     moon=moon
                 )
-                logger.debug(f"Type: {noti['type']} ID {noti['notification_id']} :: {extractions}")
             elif 'Fracture' in noti['type']:
                 # We only have notification time
                 # If the moon auto fractured then the decay time was at or before the notification, and the
@@ -355,7 +354,6 @@ def check_notifications(character_id: int):
                     cancelled=False,
                     moon=moon
                 )
-                logger.debug(f"Type: {noti['type']} ID {noti['notification_id']} :: {extractions}")
             elif 'Fired' in noti['type']:
                 # We only have notification time
                 # If the laser was manually fired than it must be after the arrival time, but
@@ -366,7 +364,6 @@ def check_notifications(character_id: int):
                     cancelled=False,
                     moon=moon
                 )
-                logger.debug(f"Type: {noti['type']} ID {noti['notification_id']} :: {extractions}")
             else:
                 # We have arrival time
                 logger.debug(f"ELSE {noti['type']} ID {noti['notification_id']}")
