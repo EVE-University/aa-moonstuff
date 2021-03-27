@@ -402,7 +402,7 @@ def check_notifications(character_id: int):
                     missing_res.append(ore)
 
             # Set the active flag if the notification is either MoonminingAutomaticFracture or MoonminingLaserFired
-            if 'AutomaticFracture' in noti['type'] or 'LaserFired' in noti['type']:
+            if ('AutomaticFracture' in noti['type'] or 'LaserFired' in noti['type']) and extraction is not None:
                 extraction.active = True
 
             # Calculate the total volume of ore
