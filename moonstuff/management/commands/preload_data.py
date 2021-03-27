@@ -22,7 +22,7 @@ class Command(BaseCommand):
         answer = input("Are you sure you would like to proceed? [Y/n]: ")
         if answer.lower() == 'y':
             load_types_and_mats.delay(
-                category_ids=categories, group_ids=groups, type_ids=None, force_loading_dogma=False
+                category_ids=categories, group_ids=groups, type_ids=None, force_loading_dogma=True
             )
             self.stdout.write(self.style.SUCCESS("Data loading has been started."))
         else:
