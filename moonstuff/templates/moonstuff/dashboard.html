@@ -28,8 +28,15 @@
                         <div class="panel-body">
                             <p style="padding-left: 15px;"><i>All times are UTC</i></p>
                             <div class="flex-container">{% for ext in extractions %}
+                                {% if ext|check_visibility %}
+                                {% else %}
                                 <div class="col-md-4">
-                                    <div class="panel panel-ext text-center">
+                                    <div class="panel panel-ext text-center" {% if ext.jackpot %} style="box-shadow: 1px 1px 10px #6ae766, 1px 1px 10px #8dd279;" {% endif %}>
+                                        {% if ext.jackpot %}
+                                            <div class="ribbon">
+                                                <span>JACKPOT</span>
+                                            </div>
+                                        {% endif %}
                                         <div class="panel-heading">
                                             <a class="info-link" href="#" data-toggle="modal" data-target="#moonModal" data-url="{% url 'moonstuff:view_moon' ext.moon.id %}">
                                                 <h4 style="margin-top: 0;">
@@ -61,6 +68,7 @@
                                         </div>
                                     </div>
                                 </div>
+                                {% endif %}
                             {% endfor %}
                             </div>
                         </div>
@@ -83,7 +91,7 @@
                                     <td>{{ moon.name }}</td>
                                     <td>{{ moon|get_refinery_name }}</td>
                                     <td>{{ moon|get_next_extraction }}</td>
-                                    <td>Coming Soon</td>
+                                    <td><a href="{% url 'moonstuff:view_moon' moon.id %}" class="btn btn-primary"><span class="far fa-eye"></span></a></td>
                                     <td>{% for ore in moon.resources.all %}{{ ore.ore.name }} R{{ ore.rarity }} {% endfor %}</td>
                                 </tr>
                             {% endfor %}
