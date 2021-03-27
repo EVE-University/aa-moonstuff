@@ -9,7 +9,7 @@ from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from celery import shared_task
 from eveuniverse.tasks import update_or_create_eve_object
 from eveuniverse.models import EveUniverseEntityModel, EveMarketPrice
-from django.db.models import Q
+from django.db.models import Q, Count, Sum, F, BigIntegerField
 from django.db.utils import IntegrityError
 from django.contrib.auth.models import User
 from django.utils.translation import gettext as gt
@@ -629,3 +629,45 @@ def update_ledger():
                         logger.debug(f"Error creating entry: {entry}")
                         logger.debug(e)
                         continue
+    update_active_extractions.delay()
+
+
+@shared_task()
+def update_active_extractions():
+    """
+    Updates flags for active extractions.
+    :return:
+    """
+    # Get active extractions
+    extractions = Extraction.objects.filter(active=True)
+
+    # Loop over extractions
+    for extraction in extractions:
+        # First check if we need to set the jackpot flag.
+        entries = LedgerEntry.objects.filter(
+            observer=extraction.refinery,
+            last_updated__lte=extraction.despawn,
+            last_updated__gte=extraction.arrival_time,
+            evetype__dogma_attributes__eve_dogma_attribute=2699,
+            evetype__dogma_attributes__value=5,
+        ).aggregate(jackpot=Count('id'))
+        if entries['jackpot'] > 0:
+            extraction.jackpot = True
+
+        # Check if extraction is past despawn time (set not active)
+        if datetime.datetime.utcnow().replace(tzinfo=pytz.utc) > extraction.despawn:
+            extraction.active = False
+
+        # Check if the extraction has been mined out (set not active)
+        if extraction.total_volume is not None:
+            entries = LedgerEntry.objects.filter(
+                observer=extraction.refinery,
+                last_updated__gte=extraction.arrival_time,
+                last_updated__lte=extraction.despawn,
+            )\
+                .annotate(volume=Sum(F('quantity') * F('evetype__volume'), output_field=BigIntegerField()))\
+                .aggregate(mined_volume=Sum('volume'))
+            if entries['mined_volume'] >= extraction.total_volume:
+                extraction.active = False
+
+        extraction.save()
