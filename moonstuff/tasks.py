@@ -262,6 +262,10 @@ def import_extraction_data():
                 start_time = event['extraction_start_time']
                 arrival_time = event['chunk_arrival_time']
                 decay_time = event['natural_decay_time']
+
+                # Calculate the total volume for the extraction. (20k m3 per hour)
+                total_volume = ((arrival_time - start_time) / datetime.timedelta(seconds=3600)) * 20000
+
                 try:
                     # Create the extraction event.
                     extraction = Extraction.objects.get_or_create(
@@ -270,7 +274,8 @@ def import_extraction_data():
                         decay_time=decay_time,
                         refinery=refinery,
                         moon=moon,
-                        corp=corp
+                        corp=corp,
+                        total_volume=total_volume,
                     )
                 except IntegrityError:
                     continue
