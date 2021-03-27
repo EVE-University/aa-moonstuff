@@ -58,6 +58,11 @@ def _get_corp_tokens(corp_id, scopes):
         return False
 
 
+def filetime_to_dt(ft):
+    us = (ft - 116444736000000000) // 10
+    return datetime.datetime(1970, 1, 1) + datetime.timedelta(microseconds=us)
+
+
 @shared_task()
 def load_types_and_mats(category_ids=None, group_ids=None, type_ids=None, force_loading_dogma=False):
     logger.debug(f'Calling eveuniverse load functions for the following args:'
