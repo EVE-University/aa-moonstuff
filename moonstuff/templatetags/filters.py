@@ -74,3 +74,8 @@ def order_quantity(resources):
     :return:
     """
     return sorted(list(resources), key=lambda r: r.quantity, reverse=True)
+
+
+@register.filter()
+def get_item(dictionary, key):
+    return dictionary.get(key, None)

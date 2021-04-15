@@ -1,5 +1,6 @@
 {% extends 'moonstuff/base.html' %}
 {% load i18n %}
+{% load humanize %}
 {% load evelinks %}
 
 {% block moon_title %} {% translate 'Dashboard' %} {% endblock %}
@@ -57,7 +58,7 @@
                                             </ul>
                                             <hr />
                                             {% for res in ext.moon.resources.all|order_quantity %}
-                                                <img src="{{ res.ore.id|type_icon_url:32 }}" /> {{ res.ore.name }} <span class="label bg-R{{ res.rarity }}">R{{ res.rarity }}</span>
+                                                <img src="{{ res.ore.id|type_icon_url:32 }}" /> {{ res.ore.name }} <span class="label bg-R{{ res.rarity }}">R{{ res.rarity }}</span> <i style="font-size: 80% !important">{{ resources|get_item:res.ore.id|floatformat:2|intcomma }} isk/m<sup>3</sup></small></i>
                                                 <div class="progress">
                                                     <div class="progress-bar progress-bar-danger progress-bar-striped" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{ res.quantity|percent }}%;">
                                                         <h5 class="media-heading percent">{{ res.quantity|percent }}% </h5>

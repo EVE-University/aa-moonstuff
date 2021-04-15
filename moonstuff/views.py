@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required, permission_required
+from typing import Iterable
 from django.contrib import messages
 from django.utils.translation import gettext as gt
 from django.conf import settings
@@ -25,16 +26,12 @@ if hasattr(settings, 'MOON_REFINE_PERCENT'):
         refine = settings.MOON_REFINE_PERCENT
 
 
-def _get_moon_value_dict(moon_id: int) -> dict:
+def _get_resource_values(resources: Iterable[Resource]) -> dict:
     """
-    Returns a dict containing the per-m3 values of the moon's resources
-    :param moon_id: The id of the moon.
+    Returns a dict containing the per-m3 values for a given list of resources.
+    :param resources:
     :return:
     """
-    resources = Resource.objects\
-        .prefetch_related('ore', 'ore__materials', 'ore__materials__material_evetype__market_price')\
-        .filter(moon__id=moon_id)
-
     ret = dict()
 
     for resource in resources:
@@ -46,6 +43,21 @@ def _get_moon_value_dict(moon_id: int) -> dict:
             mat_value = mat.material_evetype.market_price.average_price
             value += (((amount / 100) * refine) * mat_value) / ore_volume
         ret[resource.ore.id] = value
+
+    return ret
+
+
+def _get_moon_value_dict(moon_id: int) -> dict:
+    """
+    Returns a dict containing the per-m3 values of the moon's resources
+    :param moon_id: The id of the moon.
+    :return:
+    """
+    resources = Resource.objects\
+        .prefetch_related('ore', 'ore__materials', 'ore__materials__material_evetype__market_price')\
+        .filter(moon__id=moon_id)
+
+    ret = _get_resource_values(resources)
 
     return ret
 
@@ -103,11 +115,18 @@ def dashboard(request):
 
     # Get moons
     moons = EveMoon.objects.filter(resources__isnull=False).distinct()\
-        .prefetch_related('resources', 'resources__ore', 'extractions', 'extractions__refinery')
+        .prefetch_related('resources',
+                          'resources__ore',
+                          'resources__ore__materials',
+                          'resources__ore__materials__material_evetype__market_price',
+                          'extractions',
+                          'extractions__refinery')
 
+    resources = tuple(set(res for moon in moons for res in moon.resources.all()))
     ctx['events'] = events
     ctx['extractions'] = extractions
     ctx['moons'] = moons
+    ctx['resources'] = _get_resource_values(resources)
     return render(request, 'moonstuff/dashboard.html', ctx)
 
 
@@ -163,7 +182,12 @@ def moon_info(request, moon_id=None):
     # Get moon
     try:
         moon = EveMoon.objects.filter(id=moon_id, resources__isnull=False)\
-            .prefetch_related('extractions', 'extractions__refinery', 'resources', 'resources__ore')[0]
+            .prefetch_related('extractions',
+                              'extractions__refinery',
+                              'resources',
+                              'resources__ore',
+                              )[0]
+        ctx['resources'] = _get_moon_value_dict(moon_id)
         ctx['moon'] = moon
     except EveMoon.DoesNotExist:
         messages.error(request, gt('A moon matching the provided ID could not be found.'))
