@@ -3,15 +3,36 @@
 Moonstuff is a plugin for [AllianceAuth](https://gitlab.com/allianceauth/allianceauth) to allow alliances to better manage moons and their
 extraction schedules.
 
-# Rewrite Branch
+## Rewrite Branch
 ***THIS IS A DEV BRANCH! CODE ON THIS BRANCH IS WIP, AND NOT READY FOR PROD.***
 
 ***Note on Migrations:*** I will likely be squashing migrations before merging rewrite into master.
 
-### Setting
+## Contents
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [Screenshots](#screenshots)
+- [Installation](#installation)
+- [Updating](#updating)
+- [Settings](#settings)
+- [Permissions](#permissions)
+
+## Overview
+
+
+## Key Features
+
+
+## Screenshots
+
+## Installation
+
+## Updating
+
+## Settings
 `MOON_REFINE_PERCENT` - Define the refine rate to be used when calculating moon value. (Default value: 87.6)
 
-### Permissions
+## Permissions
 
 | Permission Name | Admin Site | Auth Site |
 |-----------------|------------|-----------|
@@ -19,7 +40,7 @@ extraction schedules.
 |Resource.add_resource | None | Can add access the add_scan page to add moon scan data. |
 |TrackingCharacter.add_trackingcharacter | None | Can link a character to be used in tracking extractions. |
 
-### Scopes
+## Scopes
 Though accepted best practice for auth is to ensure that one's ESI application has access to all
 scopes through the EVE Development portal, if you are not following this practice please make sure to 
 include the following scopes in your ESI application.
