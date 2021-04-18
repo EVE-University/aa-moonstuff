@@ -35,29 +35,31 @@ data to making sure everyone knows when and where the next extraction will be.
 * Per-m3 values are displayed per ore, customized based on a customizable refine percent. 
 (So if you don't have a T2-rigged Null Sec Tatara and perfect skills, you can see a more realistic value)
 * Search for R-value or ore type from moon list.
+  * Moons will show all rarity values available for that moon, rather than just the top value.
 
 
 ## Screenshots
 
 ### Dashboard
 #### Calendar View
-![h](Cal View)
+![Calendar View](https://i.imgur.com/FIImhhM.png)
 
 #### Card View
-![h](Card View)
+![Card View](https://i.imgur.com/rE6Br1c.png)
 
 ##### Jackpot
-![h](Jackpot Card)
+![Jackpot Moon Card Example](https://i.imgur.com/gNpbfnA.png)
 
 ### Moon Info
-![h](Modal)
+![Moon Info Modal](https://i.imgur.com/NbMy5dx.png)
+
 (Moon info page is identical)
 
 ### Moon List
-![h](Moon List)
+![Moon List](https://i.imgur.com/KIFU8pq.png)
 
 #### Search
-![h](RSearch)
+![Search by Rarity](https://i.imgur.com/vkkkCja.png)
 
 ## Installation
 ### 1. Install App
