@@ -14,6 +14,7 @@ class Moonstuff(models.Model):
         default_permissions = (())
         permissions = (
             ('access_moonstuff', 'Allows access to the moonstuff module'),
+            ('access_moon_list', 'Allows access to list of all moons.'),
         )
 
 
