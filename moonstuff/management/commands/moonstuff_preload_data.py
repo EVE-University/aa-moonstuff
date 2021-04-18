@@ -19,7 +19,7 @@ class Command(BaseCommand):
         self.stdout.write("This process can take a while to complete "
                           "and can create significant load on your system.")
 
-        answer = input("Are you sure you would like to proceed? [Y/n]: ")
+        answer = input("Are you sure you would like to proceed? [y/N]: ")
         if answer.lower() == 'y':
             load_types_and_mats.delay(
                 category_ids=categories, group_ids=groups, type_ids=None, force_loading_dogma=True
