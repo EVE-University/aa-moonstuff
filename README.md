@@ -4,15 +4,6 @@
 ![django versions](https://img.shields.io/pypi/djversions/aa-moonstuff?label=django)
 ![license](https://img.shields.io/pypi/l/aa-moonstuff?color=green)
 
-
-Moonstuff is a plugin for [AllianceAuth](https://gitlab.com/allianceauth/allianceauth) to allow alliances to better manage moons and their
-extraction schedules.
-
-## Rewrite Branch
-***THIS IS A DEV BRANCH! CODE ON THIS BRANCH IS WIP, AND NOT READY FOR PROD.***
-
-***Note on Migrations:*** I will likely be squashing migrations before merging rewrite into master.
-
 ## Contents
 - [Overview](#overview)
 - [Key Features](#key-features)
@@ -21,6 +12,7 @@ extraction schedules.
 - [Updating](#updating)
 - [Settings](#settings)
 - [Permissions](#permissions)
+- [Credits](#credits)
 
 ## Overview
 Moonstuff is an [AllianceAuth](https://gitlab.com/allianceauth/allianceauth) plugin focused on managing moons, from keeping track of moonscan
