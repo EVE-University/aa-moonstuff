@@ -106,7 +106,7 @@ Restart your supervisor tasks.
 Run the following command to pull the required eveuniverse data required for moonstuff.
 
 ```bash
-$ python manage.py preload_data
+$ python manage.py moonstuff_preload_data
 ```
 
 ## Updating
