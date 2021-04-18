@@ -22,6 +22,8 @@ setup(
     author='Col Crunch',
     author_email='it-team@serin.space',
     description='A plugin for publishing moon extractions, and keeping track of moon scan data.',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     install_requires=install_requires,
     extras_require={
         'testing': testing_extras,
