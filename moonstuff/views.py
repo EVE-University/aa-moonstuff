@@ -120,7 +120,11 @@ def dashboard(request):
                           'resources__ore__materials',
                           'resources__ore__materials__material_evetype__market_price',
                           'extractions',
-                          'extractions__refinery')
+                          'extractions__refinery',
+                          'eve_planet',
+                          'eve_planet__eve_solar_system',
+                          'eve_planet__eve_solar_system__eve_constellation__eve_region',
+                          )
 
     resources = tuple(set(res for moon in moons for res in moon.resources.all()))
     ctx['events'] = events

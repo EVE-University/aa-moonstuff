@@ -83,7 +83,11 @@
                         <thead>
                             <th>Moon</th>
                             <th>Refinery</th>
+                            <th>Owner</th>
+                            <th>System</th>
+                            <th>Region</th>
                             <th>Next Extraction</th>
+                            <th>Rarity</th>
                             <th>Utilities</th>
                             <th>Ores</th>
                         </thead>
@@ -92,9 +96,13 @@
                                 <tr>
                                     <td>{{ moon.name }}</td>
                                     <td>{{ moon|get_refinery_name }}</td>
+                                    <td><img src="{{ moon|get_refinery_owner_id|corporation_logo_url:32 }}">{{ moon|get_refinery_owner_name}}</td>
+                                    <td><a href="https://evemaps.dotlan.net/system/{{ moon.eve_planet.eve_solar_system.name}}">{{ moon.eve_planet.eve_solar_system.name }}</a></td>
+                                    <td>{{ moon.eve_planet.eve_solar_system.eve_constellation.eve_region.name }}</td>
                                     <td>{{ moon|get_next_extraction }}</td>
+                                    <td>{% for res in moon.resources.all|card_labels %} <span class="label bg-R{{ res }}">R{{ res }}</span> {% endfor %}</td>
                                     <td><a href="{% url 'moonstuff:view_moon' moon.id %}" class="btn btn-primary"><span class="far fa-eye"></span></a></td>
-                                    <td>{% for ore in moon.resources.all %}{{ ore.ore.name }} R{{ ore.rarity }} {% endfor %}</td>
+                                    <td>{% for ore in moon.resources.all %}{{ ore.ore.name }}{% endfor %}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -220,7 +228,7 @@ $(function() {
     $('#moonList').DataTable({
         columnDefs: [
             {
-                targets: [ 4 ],
+                targets: [ 8 ],
                 visible: false
             }
         ]

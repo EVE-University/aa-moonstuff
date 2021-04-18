@@ -14,6 +14,24 @@ def get_refinery_name(moon):
 
 
 @register.filter()
+def get_refinery_owner_name(moon):
+    exts = moon.extractions.all()
+    if len(exts) == 0:
+        return ''
+    refinery = list(exts)[-1].refinery
+    return refinery.corp.corporation_name
+
+
+@register.filter()
+def get_refinery_owner_id(moon):
+    exts = moon.extractions.all()
+    if len(exts) == 0:
+        return ''
+    refinery = list(exts)[-1].refinery
+    return refinery.corp.corporation_id
+
+
+@register.filter()
 def get_next_extraction(moon):
     exts = list(moon.extractions.all())
     if len(exts) == 0:
