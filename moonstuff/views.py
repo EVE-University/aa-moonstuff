@@ -25,6 +25,11 @@ if hasattr(settings, 'MOON_REFINE_PERCENT'):
     else:
         refine = settings.MOON_REFINE_PERCENT
 
+# Get Default Extraction View setting
+extraction_view = "Calendar"
+if hasattr(settings, "DEFAULT_EXTRACTION_VIEW"):
+    extraction_view = settings.DEFAULT_EXTRACTION_VIEW
+
 
 def _get_resource_values(resources: Iterable[Resource]) -> dict:
     """
@@ -131,6 +136,7 @@ def dashboard(request):
     ctx['extractions'] = extractions
     ctx['moons'] = moons
     ctx['resources'] = _get_resource_values(resources)
+    ctx['default_view'] = extraction_view
     return render(request, 'moonstuff/dashboard.html', ctx)
 
 

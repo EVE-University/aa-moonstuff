@@ -15,17 +15,23 @@
             <div id="extractions" class="tab-pane fade in active panel-default">
                 <div style="margin-left: 15px; margin-top: 10px;">
                     <ul class="nav nav-pills">
+                        {% if default_view == "Calendar" %}
                         <li class="active"><a data-toggle="tab" href="#exCal">Calendar View</a></li>
                         <li><a data-toggle="tab" href="#exCard">Card View</a></li>
+                        {% else %}
+                        <li class="active"><a data-toggle="tab" href="#exCard">Card View</a></li>
+                        <li><a data-toggle="tab" href="#exCal">Calendar View</a></li>
+                        {% endif %}
+
                     </ul>
                 </div>
                 <div class="tab-content">
-                    <div id="exCal" class="tab-pane fade in active panel-default">
+                    <div id="exCal" class="tab-pane fade in {% if default_view == "Calendar" %}active{% endif %} panel-default">
                         <div class="panel-body">
                             <div id="calendar"></div>
                         </div>
                     </div>
-                    <div id="exCard" class="tab-pane fade in panel-default">
+                    <div id="exCard" class="tab-pane fade in {% if default_view == "Card" %}active{% endif %} panel-default">
                         <div class="panel-body">
                             <p style="padding-left: 15px;"><i>All times are UTC</i></p>
                             <div class="flex-container">{% for ext in extractions %}
