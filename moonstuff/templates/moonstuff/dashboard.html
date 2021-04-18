@@ -59,8 +59,16 @@
                                             <hr/>
                                             <ul style="list-style-type: none; padding-left: 0;">
                                                 <li><strong>Chunk Time: {{ ext|chunk_time }} days</strong></li>
+                                                {% if not ext.active %}
                                                 <li>Chunk Arrival: {{ ext.arrival_time|date:"Y-n-j h:i" }}</li>
                                                 <li>Self Destructs: {{ ext.decay_time|date:"Y-n-j h:i" }}</li>
+                                                {% else %}
+                                                <li>
+                                                    <div class="alert alert-info">
+                                                        <strong>MINING ACTIVE</strong>
+                                                    </div>
+                                                </li>
+                                                {% endif %}
                                             </ul>
                                             <hr />
                                             {% for res in ext.moon.resources.all|order_quantity %}
