@@ -90,7 +90,10 @@ CELERYBEAT_SCHEDULE['moonstuff_run_price_update'] = {
     'task': 'moonstuff.tasks.load_prices',
     'schedule': crontab(minute=0, hour=0),
 }
-``` 
+```
+> **Note**: The last two tasks can be schdeuled at whatever time is best for you, though they need only be run once per day.
+
+- *Optional: Add any settings listed in [settings](#settings) if you would like to change the default values.* 
 
 ### 3. Run Migrations
 Run migrations and copy static files.
@@ -126,7 +129,10 @@ Lastly, restart your supervisor tasks.
 
 
 ## Settings
-`MOON_REFINE_PERCENT` - Define the refine rate to be used when calculating moon value. (Default value: 87.6)
+| Setting Name | Description | Default |
+|--------------|-------------|---------|
+|`MOON_REFINE_PERCENT` | This setting defines the refine percent to use when calculating ore values. <br /> (`0.876` and `87.6` are both acceptable formats) | `87.6` |
+|`DEFAULT_EXTRACTION_VIEW` | This setting allows you to configure if you would like the calendar or card view to show by default when the dashboard loads. <br /> (Options are `"Calendar"` or `"Card"`)| `"Calendar"` |
 
 ## Permissions
 
