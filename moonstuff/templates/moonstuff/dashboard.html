@@ -229,6 +229,12 @@ $(function() {
     // Add the key to the calendar
     $('#calendar > div.fc-toolbar.fc-header-toolbar > div.fc-left').html(key);
 
+    $('#extractions').on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
+        if (e.target.hash === '#exCal') {
+            $('#calendar').fullCalendar('render');
+        }
+    });
+
     {% if perms.moonstuff.access_moon_list %}
     // DataTable
     $('#moonList').DataTable({
