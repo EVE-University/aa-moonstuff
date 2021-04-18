@@ -11,7 +11,7 @@ from esi.decorators import token_required
 from allianceauth.eveonline.models import EveCharacter
 from allianceauth.services.hooks import get_extension_logger
 
-from .tasks import process_scan
+from .tasks import process_scan, import_extraction_data
 from .models import Resource, TrackingCharacter, Extraction, EveMoon
 from .providers import ESI_CHARACTER_SCOPES
 
@@ -173,6 +173,10 @@ def add_character(request, token):
     eve_char = EveCharacter.objects.get(character_id=token.character_id)
     char = TrackingCharacter(character=eve_char)
     char.save()
+
+    # Schedule an import task to pull data from the new Tracking Character.
+    import_extraction_data.delay()
+
     return redirect('moonstuff:dashboard')
 
 
