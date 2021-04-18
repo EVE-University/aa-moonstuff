@@ -126,6 +126,7 @@ def dashboard(request):
                           'resources__ore__materials__material_evetype__market_price',
                           'extractions',
                           'extractions__refinery',
+                          'extractions__refinery__corp',
                           'eve_planet',
                           'eve_planet__eve_solar_system',
                           'eve_planet__eve_solar_system__eve_constellation__eve_region',
