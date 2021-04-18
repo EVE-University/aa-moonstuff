@@ -9,7 +9,7 @@
     <div class="container-fluid">
         <ul class="nav nav-tabs">
             <li class="active"><a data-toggle="tab" href="#extractions">Upcoming Extractions</a></li>
-            <li><a data-toggle="tab" href="#moons">List Moons</a></li>
+            {% if perms.moonstuff.access_moon_list %}<li><a data-toggle="tab" href="#moons">List Moons</a></li>{% endif %}
         </ul>
         <div class="tab-content panel panel-default" style="border-top-left-radius: 0 !important; border-top-right-radius: 0 !important;">
             <div id="extractions" class="tab-pane fade in active panel-default">
@@ -76,6 +76,7 @@
                     </div>
                 </div>
             </div>
+            {% if perms.moonstuff.access_moon_list %}
             <div id="moons" class="tab-pane fade in panel-default">
                 <div class="panel-body">
                     <table id="moonList" class="table table-striped" style="width: 100% !important;">
@@ -100,6 +101,7 @@
                     </table>
                 </div>
             </div>
+            {% endif %}
         </div>
     </div>
     {# Modal #}
@@ -213,6 +215,7 @@ $(function() {
     // Add the key to the calendar
     $('#calendar > div.fc-toolbar.fc-header-toolbar > div.fc-left').html(key);
 
+    {% if perms.moonstuff.access_moon_list %}
     // DataTable
     $('#moonList').DataTable({
         columnDefs: [
@@ -222,6 +225,7 @@ $(function() {
             }
         ]
     });
+    {% endif %}
 
     // Ajax Modals
     $('#moonModal').on('show.bs.modal', function (e) {
