@@ -40,7 +40,7 @@ data to making sure everyone knows when and where the next extraction will be.
 ![Card View](https://i.imgur.com/rE6Br1c.png)
 
 ##### Jackpot
-![Jackpot Moon Card Example](https://i.imgur.com/gNpbfnA.png)
+![Jackpot Moon Card Example](https://i.imgur.com/KVdeiY2.png)
 
 ### Moon Info
 ![Moon Info Modal](https://i.imgur.com/NbMy5dx.png)
