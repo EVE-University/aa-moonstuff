@@ -59,7 +59,7 @@ def _get_moon_value_dict(moon_id: int) -> dict:
     :return:
     """
     resources = Resource.objects\
-        .prefetch_related('ore', 'ore__materials', 'ore__materials__material_evetype__market_price')\
+        .prefetch_related('ore', 'ore__materials', 'ore__materials__material_eve_type__market_price')\
         .filter(moon__id=moon_id)
 
     ret = _get_resource_values(resources)
