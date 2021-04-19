@@ -63,7 +63,7 @@ $ pip install aa-moonstuff
 
 ### 2. Configure AA Settings
 Configure your AA settings (`local.py`) as follows:
-- Add `'moonstuff',` to `INSTALLED_APPS`
+- Add `'eveuniverse',`and `'moonstuff',` to `INSTALLED_APPS`
 - Add the following lines to the end of your settings file to ensure that the proper tasks are scheduled to run
 
 ```python
