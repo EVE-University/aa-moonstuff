@@ -68,6 +68,8 @@ Configure your AA settings (`local.py`) as follows:
 
 ```python
 # Moonstuff Module
+EVEUNIVERSE_LOAD_TYPE_MATERIALS = True
+
 CELERYBEAT_SCHEDULE['moonstuff_import_extraction_data'] = {
     'task': 'moonstuff.tasks.import_extraction_data',
     'schedule': crontab(minute='*/10'),

@@ -45,7 +45,7 @@ def _get_resource_values(resources: Iterable[Resource]) -> dict:
         for mat in mats:
             ore_volume = resource.ore.volume
             amount = mat.quantity
-            mat_value = mat.material_evetype.market_price.average_price
+            mat_value = mat.material_eve_type.market_price.average_price
             value += (((amount / 100) * refine) * mat_value) / ore_volume
         ret[resource.ore.id] = value
 
@@ -123,7 +123,7 @@ def dashboard(request):
         .prefetch_related('resources',
                           'resources__ore',
                           'resources__ore__materials',
-                          'resources__ore__materials__material_evetype__market_price',
+                          'resources__ore__materials__material_eve_type__market_price',
                           'extractions',
                           'extractions__refinery',
                           'extractions__refinery__corp',

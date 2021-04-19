@@ -9,7 +9,7 @@ install_requires = [
     'requests',
     'allianceauth>=2.8.1',
     'django-esi>=2.0.4',
-    'django-eveuniverse>=0.7.4',
+    'django-eveuniverse>=0.8.0',
 ]
 
 testing_extras = [

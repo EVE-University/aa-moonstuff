@@ -17,7 +17,7 @@ from esi.models import Token
 
 from .providers import esi, ESI_CHARACTER_SCOPES
 from .models import \
-    Material, MaterialCheckSum, EveType, Resource, EveMoon, TrackingCharacter, Refinery, Extraction, LedgerEntry
+    EveType, Resource, EveMoon, TrackingCharacter, Refinery, Extraction, LedgerEntry
 from .parser import ScanParser
 
 logger = get_extension_logger(__name__)
@@ -112,68 +112,9 @@ def load_types_and_mats(category_ids=None, group_ids=None, type_ids=None, force_
                 enabled_sections=enabled_sections,
             )
 
-    logger.debug('Done loading eve types! Scheduling material loading.')
+    logger.debug('Done loading eve types! Scheduling price loading.')
     # Any time types are loaded we should ensure we have material and price data for all types
-    load_materials.delay(reload=True)
     load_prices.delay()
-
-
-@shared_task()
-def load_materials(reload=False):
-    """
-    Loads data from the invTypeMaterials SDE table provided by zzeve.
-        Materials will only be loaded if either they have not been before, or
-        there has been a change to the md5 checksum indicating updated data.
-    :param reload: If set to true, checksum comparison will be bypassed.
-    :return:
-    """
-    logger.debug('Starting material loading task.')
-    last_sum = None
-
-    # Get current sum
-    current_sum = requests.get('http://sde.zzeve.com/installed.md5').text[0:-1]  # Remove the newline character
-
-    # First check for previous checksum.
-    if MaterialCheckSum.objects.exists() and not reload:
-        last_sum = MaterialCheckSum.objects.get(pk=1)
-        if last_sum.checksum == current_sum:
-            logger.debug('No updates detected, aborting load_materials.')
-            return
-
-    # Clear current materials.
-    Material.objects.all().delete()
-
-    # Get existing types
-    groups = (18, 423, 427)
-    types = EveType.objects.filter(
-            Q(eve_group_id__eve_category_id=25) |
-            Q(eve_group_id__in=groups)
-        ).values_list('id', flat=True)
-    mats = requests.get("http://sde.zzeve.com/invTypeMaterials.json").json()
-    mats = list(filter(lambda t: t['typeID'] in types, mats))   # Filter out unneeded materials from the list
-
-    mat_objs = list()
-    for mat in mats:
-        mat_objs.append(
-            Material(
-                evetype_id=mat['typeID'],
-                material_evetype_id=mat['materialTypeID'],
-                quantity=mat['quantity']
-            )
-        )
-
-    Material.objects.bulk_create(mat_objs)
-
-    logger.info('Material data successfully loaded.')
-
-    # Update the checksum record.
-    if MaterialCheckSum.objects.exists():
-        if not last_sum:
-            last_sum = MaterialCheckSum.objects.get(pk=1)
-    else:
-        last_sum = MaterialCheckSum(pk=1)
-    last_sum.checksum = current_sum
-    last_sum.save()
 
 
 @shared_task()
