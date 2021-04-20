@@ -169,13 +169,17 @@ def add_character(request, token):
     :param token: django-esi Token object
     :return:
     """
-    messages.success(request, 'Character added!')
-    eve_char = EveCharacter.objects.get(character_id=token.character_id)
-    char = TrackingCharacter(character=eve_char)
-    char.save()
 
-    # Schedule an import task to pull data from the new Tracking Character.
-    import_extraction_data.delay()
+    eve_char = EveCharacter.objects.get(character_id=token.character_id)
+    if not TrackingCharacter.objects.filter(character=eve_char).exists():
+        messages.success(request, gt('Character added!'))
+        char = TrackingCharacter(character=eve_char)
+        char.save()
+
+        # Schedule an import task to pull data from the new Tracking Character.
+        import_extraction_data.delay()
+    else:
+        messages.error(request, gt('That character is already being tracked!'))
 
     return redirect('moonstuff:dashboard')
 
