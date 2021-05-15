@@ -53,7 +53,7 @@ class Refinery(models.Model):
 
 
 class TrackingCharacter(models.Model):
-    character = models.OneToOneField(EveCharacter, on_delete=models.CASCADE, primary_key=True)
+    character = models.OneToOneField(EveCharacter, on_delete=models.CASCADE)
     latest_notification_id = models.BigIntegerField(null=True, default=0)
     last_notification_check = models.DateTimeField(null=True)
 
