@@ -1,18 +1,33 @@
-image: python:3.6
-
 stages:
+  - test
   - deploy
 
 before_script:
-   - pip install twine
-   - python setup.py sdist bdist_wheel
+- apt-get update
+- apt-get install redis-server -y
+- redis-server --daemonize yes
+- python -V
+- pip install tox
 
-deploy_production:
-  stage: deploy
-  variables:
-    TWINE_USERNAME: $PRODUCTION_USERNAME
-    TWINE_PASSWORD: $PRODUCTION_PASSWORD
+.test-py38:
+  stage: test
+  image: python:3.8-buster
+
+test-38-django31:
+  extends: .test-py38
   script:
+    - tox -e py38-django31
+
+deploy-pypi:
+  stage: deploy
+  image: python:3.8-buster
+
+  before_script:
+    - pip install twine
+
+  script:
+    - python setup.py sdist bdist_wheel
     - twine upload dist/*
+
   rules:
     - if: $CI_COMMIT_TAG
