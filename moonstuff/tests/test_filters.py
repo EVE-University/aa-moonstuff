@@ -30,7 +30,10 @@ class TestFilters(TestCase):
         EveConstellation.objects.create(id=1, eve_region_id=1)
         EveSolarSystem.objects.create(id=1, security_status=1, eve_constellation_id=1)
         EvePlanet.objects.create(id=1, eve_solar_system_id=1, eve_type_id=6)
+        EvePlanet.objects.create(id=2, eve_solar_system_id=1, eve_type_id=6)
         self.moon = EveMoon.objects.create(id=1, eve_planet_id=1)
+        self.moon2 = EveMoon.objects.create(id=2, eve_planet_id=2)
+        self.moon3 = EveMoon.objects.create(id=3, eve_planet_id=2)
 
         self.rs1 = Resource.objects.create(
             ore_id=1,
@@ -82,6 +85,13 @@ class TestFilters(TestCase):
             corp_id=1
         )
 
+        self.r2 = Refinery.objects.create(
+            structure_id=2,
+            evetype_id=1,
+            name="Test Structure",
+            corp_id=1
+        )
+
         # Extraction Data
         # True
         self.ex1 = Extraction.objects.create(
@@ -127,13 +137,25 @@ class TestFilters(TestCase):
             active=False
         )
 
+        self.ex1 = Extraction.objects.create(
+            start_time=datetime(1970, 1, 1),
+            arrival_time=datetime(1970, 1, 2),
+            decay_time=datetime(1970, 1, 3),
+            moon_id=3,
+            refinery_id=2,
+            corp_id=1,
+            active=False
+        )
+
     def test_get_refinery_name(self):
         """
         Test the get_refinery_name filter.
         :return:
         """
         name = filters.get_refinery_name(self.moon)
+        name2 = filters.get_refinery_name(self.moon2)
         self.assertEqual("Test Structure", name)
+        self.assertEqual("", name2)
 
     def test_get_refinery_owner_name(self):
         """
@@ -141,7 +163,9 @@ class TestFilters(TestCase):
         :return:
         """
         name = filters.get_refinery_owner_name(self.moon)
+        name2 = filters.get_refinery_owner_name(self.moon2)
         self.assertEqual("Test", name)
+        self.assertEqual("", name2)
 
     def test_get_refinery_owner_id(self):
         """
@@ -149,7 +173,9 @@ class TestFilters(TestCase):
         :return:
         """
         corp_id = filters.get_refinery_owner_id(self.moon)
+        corp_id2 = filters.get_refinery_owner_id(self.moon2)
         self.assertEqual(123, corp_id)
+        self.assertEqual('', corp_id2)
 
     def test_get_next_extraction(self):
         """
@@ -157,7 +183,11 @@ class TestFilters(TestCase):
         :return:
         """
         ext = filters.get_next_extraction(self.moon)
+        ext2 = filters.get_next_extraction(self.moon2)
+        ext3 = filters.get_next_extraction(self.moon3)
         self.assertEqual(ext, datetime.strftime(self.ex4.arrival_time, '%Y-%m-%d %H:%M'))
+        self.assertEqual(ext2, '')
+        self.assertEqual(ext3, '')
 
     def test_check_visibility(self):
         """
