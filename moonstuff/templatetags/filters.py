@@ -33,6 +33,12 @@ def get_refinery_owner_id(moon):
 
 @register.filter()
 def get_next_extraction(moon):
+    """
+    Returns the next extraction.
+    This assumes that the last extraction listed for a moon is the next one, as you cant schedule two at once.
+    :param moon:
+    :return:
+    """
     exts = list(moon.extractions.all())
     if len(exts) == 0:
         return ''
@@ -50,8 +56,9 @@ def check_visibility(extraction):
     :param extraction:
     :return:
     """
-    return (not extraction.active and datetime.utcnow().replace(tzinfo=pytz.utc) > extraction.despawn) \
-           or extraction.depleted
+    return (not extraction.active and
+            datetime.utcnow().replace(tzinfo=pytz.utc) > extraction.despawn.replace(tzinfo=pytz.utc)
+            ) or extraction.depleted
 
 
 @register.filter()
