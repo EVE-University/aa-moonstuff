@@ -20,4 +20,24 @@ class TrackingCharacterAdmin(admin.ModelAdmin):
     search_fields = ("character__corporation_name", "character__character_name")
 
 
+class ExtractionAdmin(admin.ModelAdmin):
+    list_select_related = True
+    list_display = ("moon",
+                    "refinery",
+                    "corp",
+                    "cancelled",
+                    "start_time",
+                    "arrival_time",
+                    "total_volume",
+                    "decay_time",
+                    "despawn",
+                    "active",
+                    "jackpot",
+                    "depleted")
+
+    list_filter = ("moon", "corp", "refinery", "jackpot", "cancelled", "active")
+    search_fields = ("corp__corporation_name", "moon__name", "refinery__name")
+
+
+admin.site.register(Extraction, ExtractionAdmin)
 admin.site.register(TrackingCharacter, TrackingCharacterAdmin)
