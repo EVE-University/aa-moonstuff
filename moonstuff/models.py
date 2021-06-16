@@ -53,6 +53,7 @@ class Refinery(models.Model):
 
     class Meta:
         default_permissions = (())
+        verbose_name_plural = "Refineries"
 
 
 class TrackingCharacter(models.Model):
