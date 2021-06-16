@@ -32,6 +32,9 @@ class Resource(models.Model):
         rs = {1884: 4, 1920: 8, 1921: 16, 1922: 32, 1923: 64}
         return rs.get(self.ore.eve_group_id, 0)
 
+    def __str__(self):
+        return f"{self.ore.name} x {self.quantity} ({self.moon.name})"
+
     class Meta:
         default_permissions = ('add',)
 
