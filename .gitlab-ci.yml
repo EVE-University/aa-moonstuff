@@ -17,6 +17,10 @@ test-38-django31:
   extends: .test-py38
   script:
     - tox -e py38-django31
+  artifacts:
+    when: always
+    reports:
+      cobertura: coverage.xml
 
 deploy-pypi:
   stage: deploy
