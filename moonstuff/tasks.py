@@ -209,8 +209,8 @@ def import_extraction_data():
                 arrival_time = event['chunk_arrival_time']
                 decay_time = event['natural_decay_time']
 
-                # Calculate the total volume for the extraction. (20k m3 per hour)
-                total_volume = ((arrival_time - start_time) / datetime.timedelta(seconds=3600)) * 20000
+                # Calculate the total volume for the extraction. (40k m3 per hour)
+                total_volume = ((arrival_time - start_time) / datetime.timedelta(seconds=3600)) * 40000
 
                 try:
                     # Create the extraction event.
