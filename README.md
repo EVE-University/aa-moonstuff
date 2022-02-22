@@ -57,8 +57,6 @@ data to making sure everyone knows when and where the next extraction will be.
 ### 1. Install App
 Install the app into your allianceauth virtualenvironment via PIP.
 
-#### Note: This readme is for version 2.0 of moonstuff! While this version is still in beta, you will need to use the `--pre` flag in the install command.
-
 ```bash
 $ pip install aa-moonstuff
 ```
