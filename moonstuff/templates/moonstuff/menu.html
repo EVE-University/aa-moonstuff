@@ -11,7 +11,7 @@
             </button>
             <a class="navbar-brand" href="{% url 'moonstuff:dashboard' %}">{% translate "Moons" %}</a>
         </div>
-         {% if perms.fittings.manage %}
+         {% if perms.moonstuff.add_trackingcharacter %}
             <div class="dropdown pull-right" style="margin-top: .8em;">
                 <button class="btn btn-success btn-sm dropdown-toggle" type="button" id="manageDrop" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <span class="fa fa-plus"></span>
