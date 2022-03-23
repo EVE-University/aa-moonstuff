@@ -212,6 +212,6 @@ def moon_info(request, moon_id=None):
         messages.error(request, gt('A moon matching the provided ID could not be found.'))
         return redirect('moonstuff:dashboard')
 
-    if request.is_ajax():
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return render(request, 'moonstuff/moon_info_ajax.html', ctx)
     return render(request, 'moonstuff/moon_info.html', ctx)

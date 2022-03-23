@@ -1,12 +1,12 @@
-from django.conf.urls import url
+from django.conf.urls import re_path
 
 from . import views
 
 app_name = "moonstuff"
 
 urlpatterns = [
-    url(r'^$', views.dashboard, name='dashboard'),
-    url(r'^scan/$', views.add_scan, name='add_scan'),
-    url(r'^track/$', views.add_character, name='add_character'),
-    url(r'^info/(?P<moon_id>[0-9]+)/$', views.moon_info, name='view_moon')
+    re_path(r'^$', views.dashboard, name='dashboard'),
+    re_path(r'^scan/$', views.add_scan, name='add_scan'),
+    re_path(r'^track/$', views.add_character, name='add_character'),
+    re_path(r'^info/(?P<moon_id>[0-9]+)/$', views.moon_info, name='view_moon')
 ]
