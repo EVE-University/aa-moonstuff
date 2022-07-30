@@ -20,7 +20,9 @@ test-38-django31:
   artifacts:
     when: always
     reports:
-      cobertura: coverage.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
 
 deploy-pypi:
   stage: deploy
