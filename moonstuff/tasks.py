@@ -599,6 +599,10 @@ def update_active_extractions():
         if datetime.datetime.utcnow().replace(tzinfo=pytz.utc) > extraction.despawn:
             extraction.active = False
 
+        # Check if chunk has arrived (set not active)
+        if datetime.datetime.utcnow().replace(tzinfo=pytz.utc) < extraction.arrival_time:
+            extraction.active = False
+
         # Check if the extraction has been mined out (set not active)
         if extraction.total_volume is not None:
             entries = LedgerEntry.objects.filter(
