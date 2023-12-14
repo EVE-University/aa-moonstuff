@@ -37,7 +37,7 @@
                             <tbody>
                                 {% for ext in moon.extractions.all.reverse%}
                                     <tr>
-                                        <td>{{ ext.arrival_time|date:"Y-n-j h:i" }}</td>
+                                        <td>{{ ext.arrival_time|date:"Y-n-j H:i" }}</td>
                                         <td>
                                             {% if ext.jackpot %}
                                                 <span class="fas fa-check"></span>
