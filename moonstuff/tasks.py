@@ -33,7 +33,9 @@ def _get_tokens(scopes):
         tokens = list()
         characters = TrackingCharacter.objects.all()
         for character in characters:
-            tokens.append(Token.get_token(character.character.character_id, scopes))
+            token = Token.get_token(character.character.character_id, scopes)
+            if token:
+                tokens.append(token)
         return tokens
     except Exception as e:
         print(e)
