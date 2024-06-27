@@ -53,7 +53,9 @@ def _get_corp_tokens(corp_id, scopes):
         tokens = list()
         characters = TrackingCharacter.objects.filter(character__corporation_id=corp_id)
         for character in characters:
-            tokens.append(Token.get_token(character.character.character_id, scopes))
+            token = Token.get_token(character.character.character_id, scopes)
+            if token:
+                tokens.append(token)
         return tokens
     except Exception as e:
         print(e)
