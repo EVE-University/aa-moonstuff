@@ -10,6 +10,7 @@ from celery import shared_task
 from eveuniverse.tasks import update_or_create_eve_object
 from eveuniverse.models import EveUniverseEntityModel, EveMarketPrice
 from django.db.models import Q, Count, Sum, F, BigIntegerField
+from django.db.models.functions import Coalesce
 from django.db.utils import IntegrityError
 from django.contrib.auth.models import User
 from django.utils.translation import gettext as gt
@@ -614,7 +615,7 @@ def update_active_extractions():
                 last_updated__gte=extraction.arrival_time,
                 last_updated__lte=extraction.despawn,
             )\
-                .annotate(volume=Sum(F('quantity') * F('evetype__volume'), output_field=BigIntegerField()))\
+                .annotate(volume=Coalesce(Sum(F('quantity') * F('evetype__volume'), 0), output_field=BigIntegerField()))\
                 .aggregate(mined_volume=Sum('volume'))
             if entries['mined_volume'] >= extraction.total_volume:
                 extraction.depleted = True
